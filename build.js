@@ -24,6 +24,7 @@ function jsonOku(p, varsayilan) {
   }
 }
 function yaz(p, icerik) {
+  if (TABAN && /\.html$/.test(p)) icerik = icerik.replace(/(href|src)="\/(?!\/)/g, '$1="' + TABAN + '/');
   const tam = path.join(CIKTI, p);
   fs.mkdirSync(path.dirname(tam), { recursive: true });
   fs.writeFileSync(tam, icerik);
@@ -57,7 +58,9 @@ function sayiMi(x) { return x !== '' && !isNaN(Number(x)); }
 
 // ---------- ayarlar ----------
 const A = jsonOku('veri/ayarlar.json', {});
-const SITE_ADRES = (A.site_adresi || 'https://futbolun2yuzu.com').replace(/\/$/, '');
+// GitHub Pages geçici adresinde (kullanici.github.io/futbolun2yuzu) çalışabilmek için:
+const SITE_ADRES = (process.env.SITE_URL || A.site_adresi || 'https://futbolun2yuzu.com').replace(/\/$/, '');
+const TABAN = (process.env.SITE_BASE || '').replace(/\/$/, '');
 
 // ---------- markdown (basit) ----------
 function satirIci(s) {

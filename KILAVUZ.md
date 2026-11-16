@@ -16,74 +16,59 @@ Kod bilgisi gerekmez.
 | `public/gorseller/` | Yazılarda kullanacağın resimler | **Evet**, resim eklerken |
 | `public/` (diğerleri) | Logo, renkler (style.css) | Hayır |
 | `build.js` | Siteyi oluşturan program | **Hayır** |
-| `.github/` | Puan durumunu otomatik güncelleyen görev | Hayır |
+| `.github/` | Siteyi otomatik yayınlayan görev | Hayır |
 
 ---
 
 ## BÖLÜM 1 — Siteyi yayına alma (bir kere yapılır)
 
-### Adım 1: GitHub hesabını güvenceye al
-1. github.com → sağ üstte profil resmin → **Settings** → **Password and authentication**.
-2. **Two-factor authentication**'ı aç (telefona Google Authenticator gibi bir uygulama kur).
+Site GitHub Pages'te ücretsiz yayınlanır. Her yazı eklediğinde ve her 3 saatte bir
+(puan durumu için) kendini otomatik günceller.
 
-### Adım 2: GitHub'da yeni depo (repository) aç
+### Adım 1: GitHub hesabını güvenceye al
+github.com → profil resmin → **Settings** → **Password and authentication** →
+**Two-factor authentication**'ı aç.
+
+### Adım 2: Yeni depo aç
 1. github.com'da sağ üstteki **+** → **New repository**.
 2. Repository name: `futbolun2yuzu`
-3. **Private** seç (gizli). Cloudflare gizli depoyla da ücretsiz çalışır.
-4. Başka hiçbir kutuyu işaretleme → **Create repository**.
+3. **Public** seç. (GitHub Pages ücretsiz planda açık depo ister. Sitede gizli bilgi yok, sorun değil.)
+4. Başka kutu işaretleme → **Create repository**.
 
 ### Adım 3: Dosyaları yükle
-1. Bu zip'i bilgisayarında aç (sağ tık → Tümünü ayıkla).
-2. Açılan sayfada **uploading an existing file** bağlantısına tıkla.
-3. Zip'ten çıkan klasörün **içindeki her şeyi** (klasörün kendisini değil) sürükleyip bırak.
-4. Aşağıda **Commit changes**'a bas.
+1. Zip'i aç, çıkan `futbolun2yuzu` klasörünün **içine gir**.
+2. İçindeki her şeyi seç (Ctrl + A).
+3. GitHub'daki depo sayfasında **uploading an existing file** bağlantısına tıkla.
+4. Seçtiklerini sürükle bırak → **Commit changes**.
+5. Kontrol: depo ana sayfasında `build.js`, `public`, `veri`, `yazilar`, `.github` en üst seviyede görünmeli.
 
-> ⚠️ `.github` klasörü gizli olduğu için Windows'ta görünmeyebilir. Dosya Gezgini'nde
-> **Görünüm → Göster → Gizli öğeler**'i aç ve onu da sürükle. Yüklenmezse sorun değil,
-> sadece puan durumu otomatik güncellenmez (Adım 7'de başka yolu var).
+### Adım 4: GitHub Pages'i aç
+1. Depoda **Settings** → sol menüde **Pages**.
+2. **Source** kısmında **GitHub Actions**'ı seç. (Deploy from a branch değil!)
+3. Depoda üstteki **Actions** sekmesine geç → solda **Siteyi yayinla** → sağda **Run workflow** → yeşil **Run workflow**.
+4. 1-2 dakika bekle, yeşil tik çıkınca **Settings → Pages** sayfasının üstünde site adresin yazar:
+   `https://KULLANICIADIN.github.io/futbolun2yuzu/`
 
-### Adım 4: Cloudflare Pages'e bağla
-1. dash.cloudflare.com'a gir (hesabın yoksa ücretsiz aç, 2FA'yı da aç).
-2. Sol menüden **Workers & Pages** → **Create** (Oluştur).
-3. **Pages** sekmesini seç → **Connect to Git** (ekranda Pages görünmezse
-   "Looking to deploy Pages?" bağlantısına tıkla).
-4. GitHub hesabını bağla, `futbolun2yuzu` deposunu seç → **Begin setup**.
-5. Ayarlar:
-   - **Framework preset:** None
-   - **Build command:** `node build.js`
-   - **Build output directory:** `dist`
-6. **Save and Deploy**. 1-2 dakika sonra site `futbolun2yuzu.pages.dev` gibi bir adreste açılır.
+### Adım 5: Ayarları doldur
+`veri/ayarlar.json` dosyasını aç → sağ üstteki **kalem** simgesi:
+- `"youtube": ""` → tırnakların arasına kanal adresini yaz, ör. `"https://www.youtube.com/@kanaladi"`
+  (Doldurulmadan sitede abone ol düğmeleri görünmez.)
+- Instagram, X, TikTok, e-posta varsa doldur → **Commit changes**. Site 1-2 dakikada güncellenir.
 
-### Adım 5: Alan adını al ve bağla
-1. Cloudflare'de sol menü → **Domain Registration** → **Register Domains** →
-   `futbolun2yuzu.com` yaz → satın al. (Cloudflare yenilemede de aynı fiyatı alır.)
-2. **Auto-renew** (otomatik yenileme) açık olsun.
-3. **Workers & Pages** → sitenin projesi → **Custom domains** → **Set up a custom domain** →
-   `futbolun2yuzu.com` yaz → onayla. `www.futbolun2yuzu.com` için de aynısını yap.
-4. Birkaç dakika içinde site kendi adresinde açılır (https kilidi otomatik gelir).
+> Tırnak ve virgülleri silme. Hata olursa site güncellenmez, eski hali yayında kalır; bozulmaz.
 
-### Adım 6: Ayarları doldur
-GitHub'da `veri/ayarlar.json` dosyasını aç → sağ üstteki **kalem** simgesi → düzenle:
-- `"youtube": ""` → tırnakların arasına kanal adresini yaz, ör. `"https://www.youtube.com/@futbolun2yuzu"`
-  (Bu doldurulmadan sitede abone ol düğmeleri görünmez.)
-- Instagram, X, TikTok, e-posta varsa onları da doldur.
-- **Commit changes**. Site 1-2 dakikada kendini günceller.
-
-> Tırnak işaretlerini ve virgülleri silme. Hata yaparsan Cloudflare siteyi güncellemez,
-> eski hali yayında kalır; site bozulmaz.
-
-### Adım 7: Puan durumu otomatik güncellensin
-Puan durumu, site her oluşturulduğunda TheSportsDB'den (ücretsiz) çekilir. Bunu her 3 saatte bir tekrarlatmak için:
-1. Cloudflare → sitenin projesi → **Settings** → **Builds** → **Deploy hooks** → **Add deploy hook**.
-   Ad: `puan-durumu`, Branch: `main` → Save. Çıkan uzun adresi **kopyala**.
-2. GitHub → depo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
-   - Name: `CLOUDFLARE_DEPLOY_HOOK`
-   - Secret: kopyaladığın adres → **Add secret**.
-3. GitHub → **Actions** sekmesi → "Puan durumunu guncelle" → **Run workflow** ile bir kez dene.
-
-Artık tablo günde 8 kez kendini yeniler. Bu adres gizli kalır, kimse göremez.
-
----
+### Adım 6: Alan adını bağlama (aldığında)
+1. futbolun2yuzu.com'u istediğin firmadan al (Cloudflare yenilemede de aynı fiyatı alır, öneririm).
+2. GitHub → depo → **Settings** → **Pages** → **Custom domain** → `futbolun2yuzu.com` yaz → **Save**.
+3. Alan adını aldığın firmanın **DNS** ayarlarına şu kayıtları ekle:
+   - **A** kaydı, ad `@`, değer: `185.199.108.153`
+   - **A** kaydı, ad `@`, değer: `185.199.109.153`
+   - **A** kaydı, ad `@`, değer: `185.199.110.153`
+   - **A** kaydı, ad `@`, değer: `185.199.111.153`
+   - **CNAME** kaydı, ad `www`, değer: `KULLANICIADIN.github.io`
+   (Cloudflare kullanıyorsan bu kayıtlarda turuncu bulutu kapatıp gri yap: "DNS only".)
+4. Birkaç saat içinde GitHub'daki Pages sayfasında yeşil tik çıkar. **Enforce HTTPS** kutusunu işaretle.
+5. Actions → Siteyi yayinla → Run workflow ile siteyi bir kez yeniden oluştur.
 
 ## BÖLÜM 2 — Günlük kullanım
 
@@ -157,7 +142,8 @@ Kaldırmak için `"metin": ""` yap.
 ---
 
 ## Sorun çıkarsa
-- **Site güncellenmedi:** Cloudflare → proje → **Deployments**. Kırmızı (Failed) olana tıkla,
-  en alttaki "HATA:" satırı hangi dosyada sorun olduğunu söyler (çoğunlukla .json'da eksik virgül/tırnak).
-- **Puan durumu boş:** TheSportsDB o an yanıt vermemiş olabilir; 3 saat sonra kendiliğinden düzelir.
+- **Site güncellenmedi:** Depoda **Actions** sekmesi. Kırmızı çarpılı olana tıkla → **olustur** →
+  "Siteyi olustur" adımını aç. "HATA:" satırı hangi dosyada sorun olduğunu söyler
+  (çoğunlukla .json'da eksik virgül/tırnak).
+- **Puan durumu boş:** TheSportsDB o an yanıt vermemiş olabilir; 3 saat sonra kendiliğinden düzelir. Hemen denemek için Actions → Run workflow.
   Ücretsiz kaynak bazen tablonun bir kısmını verebilir; uzun süre eksik kalırsa söyle, başka çözüm bakarız.
