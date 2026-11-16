@@ -1,0 +1,1 @@
+Yazılarda kullanacağın resimleri bu klasöre yükle. Örnek: derbi-kapak.jpg → yazıda /gorseller/derbi-kapak.jpg

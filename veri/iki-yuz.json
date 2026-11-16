@@ -1,0 +1,19 @@
+{
+  "aktif": false,
+  "konu": "Aynı konu, iki farklı yazar, iki farklı görüş",
+  "yorum_baglantisi": "",
+  "birinci": {
+    "taraf": "EVET",
+    "baslik": "Birinci görüşün başlığı",
+    "ozet": "Birinci yazarın savunduğu görüşün kısa özeti.",
+    "yazar": "Yazar adı",
+    "baglanti": "/yazi/birinci-yazinin-adresi/"
+  },
+  "ikinci": {
+    "taraf": "HAYIR",
+    "baslik": "İkinci görüşün başlığı",
+    "ozet": "İkinci yazarın karşı görüşünün kısa özeti.",
+    "yazar": "Yazar adı",
+    "baglanti": "/yazi/ikinci-yazinin-adresi/"
+  }
+}
