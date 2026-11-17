@@ -145,5 +145,9 @@ Kaldırmak için `"metin": ""` yap.
 - **Site güncellenmedi:** Depoda **Actions** sekmesi. Kırmızı çarpılı olana tıkla → **olustur** →
   "Siteyi olustur" adımını aç. "HATA:" satırı hangi dosyada sorun olduğunu söyler
   (çoğunlukla .json'da eksik virgül/tırnak).
-- **Puan durumu boş:** TheSportsDB o an yanıt vermemiş olabilir; 3 saat sonra kendiliğinden düzelir. Hemen denemek için Actions → Run workflow.
-  Ücretsiz kaynak bazen tablonun bir kısmını verebilir; uzun süre eksik kalırsa söyle, başka çözüm bakarız.
+- **Puan durumu:** Tablo İngilizce Vikipedi'deki sezon maddesinden alınır (ör. "2026–27 Süper Lig"),
+  sıralama puana göre yapılır. Vikipedi'ye ulaşılamazsa son başarılı tablo gösterilir.
+  Vikipedi gönüllülerle güncellendiği için maçlardan sonra birkaç saat gecikme olabilir.
+  Tablonun altındaki "Kaynak: Vikipedi" yazısı lisans gereği zorunludur, silme.
+  Yeni sezonda sayfa adı otomatik değişir. Bir takımın adını farklı göstermek istersen
+  `veri/ayarlar.json` içindeki `takim_adlari` kısmına `"Vikipedideki ad": "Senin istediğin ad"` ekle.

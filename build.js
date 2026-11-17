@@ -229,33 +229,143 @@ function sezon() {
   const y = d.getUTCFullYear();
   return d.getUTCMonth() >= 6 ? y + '-' + (y + 1) : (y - 1) + '-' + y;
 }
-async function puanDurumuGetir() {
-  const yedek = jsonOku('veri/puan-durumu.json', { takimlar: [] });
-  const lig = A.lig_kimligi || '4339';
-  const url = 'https://www.thesportsdb.com/api/v1/json/' + (A.thesportsdb_anahtari || '123') + '/lookuptable.php?l=' + lig + '&s=' + sezon();
+// Vikipedi sayfa adı: ör. "2026–27 Süper Lig" (ayarlar.json'da "vikipedi_sayfasi" ile değiştirilebilir)
+function vikipediSayfasi() {
+  if (A.vikipedi_sayfasi) return A.vikipedi_sayfasi;
+  const s = sezon().split('-');
+  return s[0] + '–' + String(s[1]).slice(2) + ' Süper Lig';
+}
+function vikipediAdres() {
+  return 'https://en.wikipedia.org/wiki/' + encodeURIComponent(vikipediSayfasi().replace(/ /g, '_'));
+}
+async function getir(url, json) {
+  const kontrol = new AbortController();
+  const zaman = setTimeout(function () { kontrol.abort(); }, 20000);
   try {
-    const kontrol = new AbortController();
-    const zaman = setTimeout(function () { kontrol.abort(); }, 15000);
-    const yanit = await fetch(url, { signal: kontrol.signal });
-    clearTimeout(zaman);
+    const yanit = await fetch(url, {
+      signal: kontrol.signal,
+      headers: { 'User-Agent': 'Futbolun2YuzuSiteBot/1.0 (' + SITE_ADRES + ')' }
+    });
     if (!yanit.ok) throw new Error('HTTP ' + yanit.status);
-    const j = await yanit.json();
-    const tablo = (j && j.table) || [];
-    if (!tablo.length) throw new Error('tablo boş geldi');
-    const takimlar = tablo.map(function (t) {
-      return {
-        sira: Number(t.intRank), takim: t.strTeam, logo: t.strBadge || '',
-        o: Number(t.intPlayed), g: Number(t.intWin), b: Number(t.intDraw), m: Number(t.intLoss),
-        a: Number(t.intGoalsFor), y: Number(t.intGoalsAgainst), av: Number(t.intGoalDifference),
-        p: Number(t.intPoints), form: t.strForm || ''
-      };
-    }).sort(function (x, y) { return x.sira - y.sira; });
-    console.log('Puan durumu alındı: ' + takimlar.length + ' takım (' + sezon() + ')');
-    return { takimlar: takimlar, kaynak: 'otomatik', guncelleme: new Date().toISOString() };
-  } catch (e) {
-    console.warn('UYARI: Puan durumu otomatik alınamadı (' + e.message + '). veri/puan-durumu.json kullanılıyor.');
-    return { takimlar: yedek.takimlar || [], kaynak: 'elle', guncelleme: yedek.guncelleme || '' };
+    return json ? await yanit.json() : await yanit.text();
+  } finally { clearTimeout(zaman); }
+}
+
+// {{#invoke:Sports table ...}} bloğunu bulup parametrelerine ayırır
+function sportsTableAyikla(metin) {
+  metin = metin.replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<ref[^>]*\/>/gi, '')
+    .replace(/<ref[^>]*>[\s\S]*?<\/ref>/gi, '');
+  const bas = metin.search(/\{\{\s*#invoke:\s*sports[ _]table/i);
+  if (bas < 0) return null;
+  // eşleşen kapanış parantezini bul
+  let derinlik = 0, son = -1;
+  for (let i = bas; i < metin.length - 1; i++) {
+    if (metin[i] === '{' && metin[i + 1] === '{') { derinlik++; i++; }
+    else if (metin[i] === '}' && metin[i + 1] === '}') { derinlik--; i++; if (derinlik === 0) { son = i - 1; break; } }
   }
+  if (son < 0) return null;
+  const govde = metin.slice(bas + 2, son);
+  // üst seviyedeki | işaretlerinden böl ([[...]] ve {{...}} içini atla)
+  const parcalar = [];
+  let d1 = 0, d2 = 0, bas2 = 0;
+  for (let i = 0; i < govde.length; i++) {
+    const c = govde[i], n = govde[i + 1];
+    if (c === '{' && n === '{') { d1++; i++; }
+    else if (c === '}' && n === '}') { d1--; i++; }
+    else if (c === '[' && n === '[') { d2++; i++; }
+    else if (c === ']' && n === ']') { d2--; i++; }
+    else if (c === '|' && d1 === 0 && d2 === 0) { parcalar.push(govde.slice(bas2, i)); bas2 = i + 1; }
+  }
+  parcalar.push(govde.slice(bas2));
+  const p = {};
+  for (const parca of parcalar) {
+    const e = parca.indexOf('=');
+    if (e < 0) continue;
+    p[parca.slice(0, e).trim().toLowerCase()] = parca.slice(e + 1).trim();
+  }
+  return p;
+}
+function vikiMetinTemizle(s) {
+  s = String(s || '');
+  s = s.replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, '$2').replace(/\[\[([^\]]*)\]\]/g, '$1');
+  s = s.replace(/\{\{[^{}]*\}\}/g, '').replace(/'''?/g, '').replace(/<[^>]+>/g, '');
+  return s.replace(/\s+/g, ' ').trim();
+}
+function sayi(x) { const n = parseInt(String(x || '').replace(/[−–]/g, '-'), 10); return isNaN(n) ? 0 : n; }
+
+async function vikipediTablo() {
+  const url = 'https://en.wikipedia.org/w/index.php?action=raw&title=' + encodeURIComponent(vikipediSayfasi().replace(/ /g, '_'));
+  const metin = await getir(url, false);
+  const p = sportsTableAyikla(metin);
+  if (!p || !p.team_order) throw new Error('Vikipedi sayfasında puan tablosu bulunamadı');
+  const kodlar = p.team_order.split(',').map(function (k) { return k.trim().toLowerCase(); }).filter(Boolean);
+  const adlar = (A.takim_adlari || {});
+  const takimlar = kodlar.map(function (k, i) {
+    const g = sayi(p['win_' + k]), b = sayi(p['draw_' + k]), m = sayi(p['loss_' + k]);
+    const a = sayi(p['gf_' + k]), y = sayi(p['ga_' + k]);
+    const ad = vikiMetinTemizle(p['name_' + k]) || k.toUpperCase();
+    return {
+      takim: adlar[ad] || ad, logo: '', form: '',
+      o: g + b + m, g: g, b: b, m: m, a: a, y: y, av: a - y,
+      p: 3 * g + b + sayi(p['adjust_points_' + k]),
+      vikiSira: i
+    };
+  });
+  if (takimlar.length < 10) throw new Error('tabloda yalnızca ' + takimlar.length + ' takım var');
+  // Vikipedi sırası bazen geç düzeltiliyor: önce puana göre sırala,
+  // puan eşitse Vikipedi'deki sırayı koru (ikili averaj vb. editörlerce uygulanır).
+  takimlar.sort(function (x, y) { return (y.p - x.p) || (x.vikiSira - y.vikiSira); });
+  takimlar.forEach(function (t, i) { t.sira = i + 1; delete t.vikiSira; });
+  return takimlar;
+}
+
+async function sportsDbTablo() {
+  const url = 'https://www.thesportsdb.com/api/v1/json/' + (A.thesportsdb_anahtari || '123') + '/lookuptable.php?l=' + (A.lig_kimligi || '4339') + '&s=' + sezon();
+  const j = await getir(url, true);
+  const tablo = (j && j.table) || [];
+  if (!tablo.length) throw new Error('tablo boş geldi');
+  return tablo.map(function (t) {
+    return {
+      sira: Number(t.intRank), takim: t.strTeam, logo: '',
+      o: Number(t.intPlayed), g: Number(t.intWin), b: Number(t.intDraw), m: Number(t.intLoss),
+      a: Number(t.intGoalsFor), y: Number(t.intGoalsAgainst), av: Number(t.intGoalDifference),
+      p: Number(t.intPoints), form: ''
+    };
+  }).sort(function (x, y) { return x.sira - y.sira; });
+}
+
+// Vikipedi'ye ulaşılamazsa: yayındaki sitenin son tablosu kullanılır (ek ayar gerekmez)
+async function puanDurumuGetir() {
+  try {
+    const takimlar = await vikipediTablo();
+    console.log('Puan durumu Vikipedi\'den alındı: ' + takimlar.length + ' takım (' + vikipediSayfasi() + ')');
+    return { takimlar: takimlar, kaynak: 'vikipedi', guncelleme: new Date().toISOString() };
+  } catch (e) {
+    console.warn('UYARI: Vikipedi\'den puan durumu alınamadı (' + e.message + ').');
+  }
+  try {
+    const eski = await getir(SITE_ADRES + '/puan-durumu.json?t=' + Date.now(), true);
+    if (eski && eski.takimlar && eski.takimlar.length) { console.log('Yayındaki sitenin son tablosu kullanılıyor.'); return eski; }
+  } catch (e) { /* site henüz yok */ }
+  const elle = jsonOku('veri/puan-durumu.json', { takimlar: [] });
+  if (elle.takimlar && elle.takimlar.length) { console.log('veri/puan-durumu.json kullanılıyor.'); return { takimlar: elle.takimlar, kaynak: 'elle', guncelleme: elle.guncelleme || '' }; }
+  try {
+    const takimlar = await sportsDbTablo();
+    console.log('Yedek kaynak TheSportsDB kullanıldı (' + takimlar.length + ' takım).');
+    return { takimlar: takimlar, kaynak: 'thesportsdb', guncelleme: new Date().toISOString() };
+  } catch (e) {
+    console.warn('UYARI: Hiçbir kaynaktan puan durumu alınamadı.');
+    return { takimlar: [], kaynak: '', guncelleme: '' };
+  }
+}
+function kaynakNotu(pd) {
+  if (pd.kaynak === 'vikipedi') {
+    return 'Kaynak: <a href="' + vikipediAdres() + '" target="_blank" rel="noopener">Vikipedi</a> · ' +
+      '<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.tr" target="_blank" rel="noopener">CC BY-SA 4.0</a>';
+  }
+  if (pd.kaynak === 'thesportsdb') return 'Kaynak: TheSportsDB';
+  return '';
 }
 
 // ---------- şablon parçaları ----------
@@ -360,7 +470,7 @@ function puanKucuk(pd) {
     rows.map(function (t) {
       return '<tr><td>' + t.sira + '</td><td><span class="takim">' + (t.logo ? '<img src="' + kac(t.logo) + '/tiny" alt="" loading="lazy" width="20" height="20">' : '') + kac(t.takim) + '</span></td><td>' + t.o + '</td><td>' + (t.av > 0 ? '+' : '') + t.av + '</td><td class="p">' + t.p + '</td></tr>';
     }).join('') + '</tbody></table>';
-  return h + '<a class="tum" href="/puan-durumu/">Tam tabloyu gör →</a><p class="not">' + guncellemeNotu(pd) + '</p></aside>';
+  return h + '<a class="tum" href="/puan-durumu/">Tam tabloyu gör →</a><p class="not">' + [guncellemeNotu(pd), kaynakNotu(pd)].filter(Boolean).join('<br>') + '</p></aside>';
 }
 
 // ---------- sayfalar ----------
@@ -443,11 +553,12 @@ function puanSayfa(pd) {
   if (!pd.takimlar.length) {
     h += '<div class="kutu bos">Puan durumu şu an alınamadı. Kısa süre sonra tekrar dene.</div>';
   } else {
-    h += '<div class="kutu puan tam tablo-kutu"><table><thead><tr><th scope="col">#</th><th scope="col">Takım</th><th scope="col" title="Oynanan">O</th><th scope="col" title="Galibiyet">G</th><th scope="col" title="Beraberlik">B</th><th scope="col" title="Mağlubiyet">M</th><th scope="col" title="Atılan">A</th><th scope="col" title="Yenilen">Y</th><th scope="col" title="Averaj">AV</th><th scope="col" title="Puan">P</th><th scope="col">Form</th></tr></thead><tbody>' +
+    const formVar = pd.takimlar.some(function (t) { return t.form; });
+    h += '<div class="kutu puan tam tablo-kutu"><table><thead><tr><th scope="col">#</th><th scope="col">Takım</th><th scope="col" title="Oynanan">O</th><th scope="col" title="Galibiyet">G</th><th scope="col" title="Beraberlik">B</th><th scope="col" title="Mağlubiyet">M</th><th scope="col" title="Atılan">A</th><th scope="col" title="Yenilen">Y</th><th scope="col" title="Averaj">AV</th><th scope="col" title="Puan">P</th>' + (formVar ? '<th scope="col">Form</th>' : '') + '</tr></thead><tbody>' +
       pd.takimlar.map(function (t) {
-        return '<tr><td>' + t.sira + '</td><td><span class="takim">' + (t.logo ? '<img src="' + kac(t.logo) + '/tiny" alt="" loading="lazy" width="20" height="20">' : '') + kac(t.takim) + '</span></td><td>' + t.o + '</td><td>' + t.g + '</td><td>' + t.b + '</td><td>' + t.m + '</td><td>' + t.a + '</td><td>' + t.y + '</td><td>' + (t.av > 0 ? '+' : '') + t.av + '</td><td class="p">' + t.p + '</td><td>' + formRozet(t.form) + '</td></tr>';
+        return '<tr><td>' + t.sira + '</td><td><span class="takim">' + (t.logo ? '<img src="' + kac(t.logo) + '/tiny" alt="" loading="lazy" width="20" height="20">' : '') + kac(t.takim) + '</span></td><td>' + t.o + '</td><td>' + t.g + '</td><td>' + t.b + '</td><td>' + t.m + '</td><td>' + t.a + '</td><td>' + t.y + '</td><td>' + (t.av > 0 ? '+' : '') + t.av + '</td><td class="p">' + t.p + '</td>' + (formVar ? '<td>' + formRozet(t.form) + '</td>' : '') + '</tr>';
       }).join('') + '</tbody></table></div>' +
-      '<p class="not">Veri kaynağı: TheSportsDB. Tablo gün içinde otomatik olarak güncellenir.</p>';
+      '<p class="not">' + kaynakNotu(pd) + (kaynakNotu(pd) ? '. ' : '') + 'Tablo gün içinde otomatik olarak güncellenir; sıralama puana göre yapılır.</p>';
   }
   return sayfa({ aktif: 'puan', yol: '/puan-durumu/', baslik: 'Süper Lig Puan Durumu', aciklama: 'Güncel Trendyol Süper Lig puan durumu.', icerik: h });
 }
@@ -507,6 +618,7 @@ function bulunamadiSayfa() {
   yaz('index.html', anaSayfa(pd));
   for (const k of Object.keys(KATEGORILER)) yaz(KATEGORILER[k].yol + '/index.html', kategoriSayfa(k));
   yaz('puan-durumu/index.html', puanSayfa(pd));
+  if (pd.takimlar.length) yaz('puan-durumu.json', JSON.stringify(pd));
   yaz('hakkimizda/index.html', hakkimizdaSayfa());
   yaz('404.html', bulunamadiSayfa());
   const kullanilan = {};
