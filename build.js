@@ -147,7 +147,7 @@ function markdown(md) {
     if ((m = /^youtube:\s*(\S+)/i.exec(st))) {
       paragrafBitir(); listeBitir();
       const id = youtubeId(m[1]);
-      if (id) out.push('<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/' + id + '" title="YouTube videosu" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>');
+      if (id) out.push('<div class="video' + (/\/shorts\//.test(m[1]) ? ' dikey' : '') + '"><iframe src="https://www.youtube-nocookie.com/embed/' + id + '" title="YouTube videosu" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>');
       continue;
     }
     if ((m = /^!\[([^\]]*)\]\(([^)\s]+)\)$/.exec(st))) {

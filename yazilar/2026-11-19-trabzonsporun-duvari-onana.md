@@ -15,6 +15,8 @@ Trabzonspor'un kalesinde bir duvar var. Süper Lig'de 11 hafta geride kaldı ve 
 
 Manchester United'dan ikinci kez kiralanan André Onana'nın yazın takımda kalması tartışma yaratmıştı. 11 haftanın ardından rakamlar, o tartışmanın şimdilik kimin lehine döndüğünü açıkça gösteriyor.
 
+youtube: https://www.youtube.com/shorts/iEukBWn8njI
+
 ## 1. Yüz: Rakamlar ne söylüyor?
 
 Önce kısa bir açıklama: **xG (gol beklentisi)**, bir takımın bulduğu pozisyonların kaliteye göre kaç gole dönüşmesi gerektiğini gösteren bir ölçü. Ceza sahası içinden, kaleciyle karşı karşıya bir şut yüksek xG değerine sahiptir; 30 metreden zorlama bir şut ise düşük.
@@ -53,6 +55,6 @@ Rakamların bir de öbür yüzü var.
 
 Bizce ikisi de doğru. Onana şu an Trabzonspor'a maç kazandırıyor. Ama şampiyonluk için savunmanın da kaleciye yardım etmesi gerekecek.
 
-**Sen ne düşünüyorsun?** Onana bu takımı şampiyonluğa taşır mı, yoksa bu tempo sürmez mi? Görüşünü YouTube'daki videomuzun altına yaz.
+**Sen ne düşünüyorsun?** Onana bu takımı şampiyonluğa taşır mı, yoksa bu tempo sürmez mi? Görüşünü [YouTube'daki videomuzun](https://www.youtube.com/shorts/iEukBWn8njI) altına yaz.
 
 *Veriler: Bomstat · Süper Lig 2026/27, ilk 11 hafta.*
