@@ -412,8 +412,10 @@ function sayfa(o) {
       (A.son_dakika.baglanti ? '<a href="' + kac(A.son_dakika.baglanti) + '">' + kac(sd) + '</a>' : '<span>' + kac(sd) + '</span>') + '</div></div>\n' : '') +
     '<main class="kap" id="icerik">\n' + o.icerik + '\n</main>\n' +
     '<footer class="alt"><div class="kap"><span>© ' + new Date().getFullYear() + ' ' + kac(A.site_adi) + ' · ' + kac(SITE_ADRES.replace(/^https?:\/\//, '')) + '</span>' +
-    '<nav aria-label="Alt menü"><a href="/hakkimizda/">Hakkımızda</a><a href="/hakkimizda/#iletisim">İletişim</a>' + sosyal() + '</nav></div></footer>\n' +
-    '<script src="/site.js" defer></script>\n</body>\n</html>\n';
+    '<nav aria-label="Alt menü"><a href="/hakkimizda/">Hakkımızda</a><a href="/hakkimizda/#iletisim">İletişim</a><a href="/gizlilik/">Gizlilik</a>' + sosyal() + '</nav></div></footer>\n' +
+    '<script src="/site.js" defer></script>\n' +
+    (A.cloudflare_analytics_token ? '<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon=\'{"token": "' + kac(A.cloudflare_analytics_token) + '"}\'></script>\n' : '') +
+    '</body>\n</html>\n';
 }
 
 function yaziAdres(y) { return '/yazi/' + y.slug + '/'; }
@@ -603,6 +605,45 @@ function hakkimizdaSayfa() {
   return sayfa({ yol: '/hakkimizda/', baslik: 'Hakkımızda', icerik: h });
 }
 
+function gizlilikSayfa() {
+  const iletisim = A.eposta ? '[' + A.eposta + '](mailto:' + A.eposta + ')' : 'sosyal medya hesaplarımız';
+  const md = [
+    'Son güncelleme: ' + tarihYaz(new Date().toISOString().slice(0, 10)),
+    '',
+    'Bu sayfa, **' + (A.site_adi || 'Futbolun 2 Yüzü') + '** sitesini ziyaret ettiğinde hangi bilgilerin işlendiğini anlatır.',
+    '',
+    '## Topladığımız bilgiler',
+    'Sitede üyelik, yorum ya da form yoktur. Senden ad, e-posta veya benzeri kişisel bilgi istemiyoruz.',
+    '',
+    '## Çerezler',
+    'Sitemiz kendi çerezini kullanmaz ve seni takip etmez.',
+    '',
+    '## Ziyaretçi istatistikleri',
+    (A.cloudflare_analytics_token
+      ? 'Kaç kişinin siteyi ziyaret ettiğini ve hangi yazıların okunduğunu görmek için **Cloudflare Web Analytics** kullanıyoruz. Bu hizmet çerez kullanmaz, seni tanımlamaz ve siteler arasında takip etmez; yalnızca sayfa görüntülenme sayısı gibi toplu bilgiler tutar.'
+      : 'Şu anda ziyaretçi istatistiği tutmuyoruz.'),
+    '',
+    '## Üçüncü taraf hizmetler',
+    'Sitenin çalışması için aşağıdaki hizmetler kullanılır. Sayfayı açtığında tarayıcın bu hizmetlere bağlanır ve IP adresin gibi teknik bilgiler onlara iletilebilir:',
+    '',
+    '- **GitHub Pages:** Sitenin barındırıldığı yer.',
+    '- **Google Fonts:** Yazı tipleri.',
+    '- **YouTube:** Yazılara gömülen videolar. Videolar, oynatmaya basana kadar çerez bırakmayan "gizlilik geliştirilmiş mod" ile gömülür.',
+    '',
+    'Bu hizmetlerin kendi gizlilik politikaları geçerlidir.',
+    '',
+    '## Dış bağlantılar',
+    'Yazılarımızda başka sitelere bağlantılar olabilir. O sitelerin içeriğinden ve gizlilik uygulamalarından sorumlu değiliz.',
+    '',
+    '## Puan durumu verisi',
+    'Puan durumu tablosu Vikipedi\'den alınır ve CC BY-SA 4.0 lisansı ile kullanılır.',
+    '',
+    '## İletişim',
+    'Bu politika hakkında soruların için ' + iletisim + ' üzerinden bize ulaşabilirsin. Politika değişirse bu sayfayı güncelleriz.'
+  ].join('\n');
+  return sayfa({ yol: '/gizlilik/', baslik: 'Gizlilik Politikası', aciklama: 'Futbolun 2 Yüzü gizlilik ve çerez politikası.', icerik: '<div class="sayfa-bas"><h1>Gizlilik Politikası</h1></div><div class="makale"><div class="icerik">' + markdown(md) + '</div></div>' });
+}
+
 function bulunamadiSayfa() {
   return sayfa({ yol: '/404', baslik: 'Sayfa bulunamadı', icerik: '<div class="sayfa-bas"><h1>Ofsayt!</h1><p>Aradığın sayfa bulunamadı.</p></div><a class="dugme" style="align-self:flex-start" href="/">Ana sayfaya dön</a>' });
 }
@@ -621,6 +662,7 @@ function bulunamadiSayfa() {
   if (pd.takimlar.length) yaz('puan-durumu.json', JSON.stringify(pd));
   yaz('hakkimizda/index.html', hakkimizdaSayfa());
   yaz('404.html', bulunamadiSayfa());
+  yaz('gizlilik/index.html', gizlilikSayfa());
   const kullanilan = {};
   for (const y of yazilar) {
     if (kullanilan[y.slug]) console.warn('UYARI: "' + y.slug + '" adresi iki yazıda kullanılıyor: ' + kullanilan[y.slug] + ' ve ' + y.dosya);
@@ -628,7 +670,7 @@ function bulunamadiSayfa() {
     yaz('yazi/' + y.slug + '/index.html', yaziSayfa(y));
   }
 
-  const adresler = ['/', '/haberler/', '/makaleler/', '/transferler/', '/analiz/', '/puan-durumu/', '/hakkimizda/']
+  const adresler = ['/', '/haberler/', '/makaleler/', '/transferler/', '/analiz/', '/puan-durumu/', '/hakkimizda/', '/gizlilik/']
     .concat(yazilar.map(yaziAdres));
   yaz('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     adresler.map(function (u) { return '  <url><loc>' + SITE_ADRES + u + '</loc></url>'; }).join('\n') + '\n</urlset>\n');
