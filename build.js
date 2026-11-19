@@ -62,6 +62,11 @@ const A = jsonOku('veri/ayarlar.json', {});
 const SITE_ADRES = (process.env.SITE_URL || A.site_adresi || 'https://futbolun2yuzu.com').replace(/\/$/, '');
 const TABAN = (process.env.SITE_BASE || '').replace(/\/$/, '');
 
+function epostalar() {
+  const e = Array.isArray(A.eposta) ? A.eposta : String(A.eposta || '').split(',');
+  return e.map(function (x) { return String(x).trim(); }).filter(Boolean);
+}
+
 // ---------- markdown (basit) ----------
 function satirIci(s) {
   s = kac(s);
@@ -600,13 +605,13 @@ function hakkimizdaSayfa() {
   const metin = A.hakkimizda || '';
   let h = '<div class="sayfa-bas"><h1>Hakkımızda</h1></div><div class="makale"><div class="icerik">' + markdown(metin) + '</div>' +
     '<h2 id="iletisim" class="bb" style="margin-top:12px">İletişim</h2><div class="icerik">' +
-    (A.eposta ? '<p>E-posta: <a href="mailto:' + kac(A.eposta) + '">' + kac(A.eposta) + '</a></p>' : '<p>İletişim için sosyal medya hesaplarımızdan bize ulaşabilirsin.</p>') +
+    (epostalar().length ? '<p>E-posta: ' + epostalar().map(function (e) { return '<a href="mailto:' + kac(e) + '">' + kac(e) + '</a>'; }).join(' · ') + '</p><p>Sosyal medya hesaplarımızdan da bize ulaşabilirsin.</p>' : '<p>İletişim için sosyal medya hesaplarımızdan bize ulaşabilirsin.</p>') +
     '</div></div>';
   return sayfa({ yol: '/hakkimizda/', baslik: 'Hakkımızda', icerik: h });
 }
 
 function gizlilikSayfa() {
-  const iletisim = A.eposta ? '[' + A.eposta + '](mailto:' + A.eposta + ')' : 'sosyal medya hesaplarımız';
+  const iletisim = epostalar().length ? epostalar().map(function (e) { return '[' + e + '](mailto:' + e + ')'; }).join(' veya ') + ' adresleri' : 'sosyal medya hesaplarımız';
   const md = [
     'Son güncelleme: ' + tarihYaz(new Date().toISOString().slice(0, 10)),
     '',
