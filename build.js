@@ -484,8 +484,13 @@ function puanKucuk(pd) {
 function anaSayfa(pd) {
   const manset = yazilar.find(function (y) { return y.manset; }) || yazilar[0];
   const digerleri = yazilar.filter(function (y) { return y !== manset; });
-  const sonHaberler = digerleri.filter(function (y) { return y.kat === 'haber' || y.kat === 'transfer'; }).slice(0, 5);
-  const makaleler = digerleri.filter(function (y) { return y.kat === 'makale' || y.kat === 'analiz'; }).slice(0, 3);
+  let sonHaberler = digerleri.filter(function (y) { return y.kat === 'haber' || y.kat === 'transfer'; }).slice(0, 5);
+  let yanBaslik = 'Son Haberler';
+  // Henüz haber yoksa yan kutu boş kalmasın: son yazıları göster
+  if (!sonHaberler.length) { sonHaberler = digerleri.slice(0, 5); yanBaslik = 'Son Yazılar'; }
+  const makaleler = digerleri.filter(function (y) {
+    return (y.kat === 'makale' || y.kat === 'analiz') && sonHaberler.indexOf(y) < 0;
+  }).slice(0, 3);
   const sonAnaliz = yazilar.find(function (y) { return y.kat === 'analiz'; });
   let h = '';
 
@@ -498,8 +503,8 @@ function anaSayfa(pd) {
   } else {
     h += '<div class="kutu manset"><div class="ic"><h1>İlk yazı yakında</h1></div></div>';
   }
-  h += '<aside class="kutu liste yan" style="gap:0"><h2 class="bb-k">Son Haberler</h2>' +
-    (sonHaberler.length ? sonHaberler.map(listeOge).join('') : '<p class="bos">Henüz haber yok.</p>') + '</aside></section>';
+  h += '<aside class="kutu liste yan" style="gap:0"><h2 class="bb-k">' + yanBaslik + '</h2>' +
+    (sonHaberler.length ? sonHaberler.map(listeOge).join('') : '<p class="bos">Yakında yeni yazılar burada.</p>') + '</aside></section>';
 
   // İki yüz
   if (ikiYuz.aktif && ikiYuz.birinci && ikiYuz.ikinci) {
@@ -517,9 +522,9 @@ function anaSayfa(pd) {
 
   // Makaleler + transfer | puan durumu
   h += '<section class="satir"><div class="genis">' +
-    '<div class="bolum-baslik"><h2 class="bb">Makaleler</h2><a class="tum" href="/makaleler/">Tümünü gör →</a></div>' +
-    (makaleler.length ? '<div class="kartlar">' + makaleler.map(kart).join('') + '</div>' : '<div class="kutu bos">Henüz makale yok.</div>') +
-    '<div class="bolum-baslik" style="margin-top:18px"><h2 class="bb">Transfer Masası</h2>' + (transferler.length ? transferFiltre('tr-ana') : '') + '</div>' +
+    (makaleler.length ? '<div class="bolum-baslik"><h2 class="bb">Makaleler</h2><a class="tum" href="/makaleler/">Tümünü gör →</a></div>' +
+      '<div class="kartlar">' + makaleler.map(kart).join('') + '</div>' : '') +
+    '<div class="bolum-baslik"' + (makaleler.length ? ' style="margin-top:18px"' : '') + '><h2 class="bb">Transfer Masası</h2>' + (transferler.length ? transferFiltre('tr-ana') : '') + '</div>' +
     transferTablo(transferler.slice(0, 6), 'tr-ana') +
     (transferler.length > 6 ? '<a class="tum" href="/transferler/">Tüm transferler →</a>' : '') +
     '</div><div class="yan">' + puanKucuk(pd) + '</div></section>';
