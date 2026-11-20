@@ -141,6 +141,13 @@ Kaldırmak için `"metin": ""` yap.
 
 ---
 
+## Gol krallığı
+Gol krallığı listesi TFF'nin sitesinden otomatik alınır (günde 8 kez) ve "Kaynak: TFF" notuyla gösterilir.
+TFF'nin kullanım şartlarına göre bilgiler kaynak gösterilerek yayımlanabilir ama **ticari amaçla kullanılamaz**.
+Siteye reklam/sponsor koymadan önce gol krallığı için başka bir kaynağa geçilmeli.
+TFF oyuncuların tam adını yazar. Bir ismi kısaltmak istersen `veri/ayarlar.json` içine şunu ekle:
+`"oyuncu_adlari": { "TFF'DEKİ TAM AD": "Gösterilecek ad" }`
+
 ## Sorun çıkarsa
 - **Site güncellenmedi:** Depoda **Actions** sekmesi. Kırmızı çarpılı olana tıkla → **olustur** →
   "Siteyi olustur" adımını aç. "HATA:" satırı hangi dosyada sorun olduğunu söyler
