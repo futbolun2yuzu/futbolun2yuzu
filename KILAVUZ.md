@@ -141,7 +141,11 @@ Kaldırmak için `"metin": ""` yap.
 
 ---
 
-## Gol krallığı
+## Gol ve asist krallığı
+Kendi Google E-Tablon bağlıysa (`veri/ayarlar.json` → `gol_asist_tablosu`) listeler oradan okunur;
+tabloyu güncellemen yeterli, site en geç 3 saatte kendini günceller. Tablo bağlı değilse veya okunamazsa
+gol krallığı TFF'den alınır (asist krallığı sadece kendi tablondan gelir).
+
 Gol krallığı listesi TFF'nin sitesinden otomatik alınır (günde 8 kez) ve "Kaynak: TFF" notuyla gösterilir.
 TFF'nin kullanım şartlarına göre bilgiler kaynak gösterilerek yayımlanabilir ama **ticari amaçla kullanılamaz**.
 Siteye reklam/sponsor koymadan önce gol krallığı için başka bir kaynağa geçilmeli.

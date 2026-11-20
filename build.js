@@ -430,7 +430,62 @@ function golListesiAyikla(satirlar) {
   });
   return enIyi;
 }
+function csvAyikla(metin) {
+  const satirlar = []; let satir = [], alan = '', tirnak = false;
+  metin = metin.replace(/^\uFEFF/, '');
+  for (let i = 0; i < metin.length; i++) {
+    const c = metin[i];
+    if (tirnak) {
+      if (c === '"' && metin[i + 1] === '"') { alan += '"'; i++; }
+      else if (c === '"') tirnak = false;
+      else alan += c;
+    } else if (c === '"') tirnak = true;
+    else if (c === ',') { satir.push(alan); alan = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && metin[i + 1] === '\n') i++;
+      satir.push(alan); satirlar.push(satir); satir = []; alan = '';
+    } else alan += c;
+  }
+  if (alan || satir.length) { satir.push(alan); satirlar.push(satir); }
+  return satirlar;
+}
+// Kendi Google E-Tablon (ayarlar.json: "gol_asist_tablosu")
+async function kendiTablomuOku() {
+  if (!A.gol_asist_tablosu) return null;
+  const satirlar = csvAyikla(await getir(A.gol_asist_tablosu, false));
+  const bas = (satirlar[0] || []).map(function (x) { return slugla(x); });
+  const sut = function (ad) { return bas.indexOf(ad); };
+  const iL = sut('liste'), iO = sut('oyuncu'), iK = sut('kulup'), iS = sut('sayi');
+  if (iL < 0 || iO < 0 || iS < 0) throw new Error('tablo başlıkları bulunamadı (Liste, Oyuncu, Kulüp, Sayı olmalı)');
+  const sonuc = { gol: [], asist: [] };
+  for (const r of satirlar.slice(1)) {
+    const liste = slugla(r[iL] || ''), oyuncu = String(r[iO] || '').trim();
+    const sayi = parseInt(String(r[iS] || '').trim(), 10);
+    if (!oyuncu || /^örnek/i.test(oyuncu) || isNaN(sayi)) continue;
+    const o = { oyuncu: oyuncu, kulup: String(iK >= 0 ? r[iK] || '' : '').trim(), gol: sayi };
+    if (liste === 'gol') sonuc.gol.push(o); else if (liste === 'asist') sonuc.asist.push(o);
+  }
+  const sirala = function (a, b) { return b.gol - a.gol || a.oyuncu.localeCompare(b.oyuncu, 'tr'); };
+  sonuc.gol.sort(sirala); sonuc.asist.sort(sirala);
+  return sonuc;
+}
 async function golKralligiGetir() {
+  if (A.gol_asist_tablosu) {
+    try {
+      const t = await kendiTablomuOku();
+      if (t.gol.length || t.asist.length) {
+        console.log('Gol/asist kendi tablomuzdan alındı: ' + t.gol.length + ' gol, ' + t.asist.length + ' asist satırı');
+        return { oyuncular: t.gol, asistler: t.asist, kaynak: 'tablo', guncelleme: new Date().toISOString() };
+      }
+      console.warn('UYARI: Kendi tablomuz boş.');
+    } catch (e) {
+      console.warn('UYARI: Kendi tablomuz okunamadı (' + e.message + ').');
+      try {
+        const eski = await getir(SITE_ADRES + '/gol-kralligi.json?t=' + Date.now(), true);
+        if (eski && eski.kaynak === 'tablo') { console.log('Yayındaki sitenin son tablo verisi kullanılıyor.'); return eski; }
+      } catch (e2) { /* yok */ }
+    }
+  }
   try {
     const kontrol = new AbortController();
     const zaman = setTimeout(function () { kontrol.abort(); }, 20000);
@@ -446,7 +501,7 @@ async function golKralligiGetir() {
     if (liste.length < 5) throw new Error('listede yalnızca ' + liste.length + ' oyuncu bulundu');
     liste.sort(function (a, b) { return b.gol - a.gol; });
     console.log('Gol krallığı TFF\'den alındı: ' + liste.length + ' oyuncu');
-    return { oyuncular: liste, kaynak: 'tff', guncelleme: new Date().toISOString() };
+    return { oyuncular: liste, asistler: [], kaynak: 'tff', guncelleme: new Date().toISOString() };
   } catch (e) {
     console.warn('UYARI: Gol krallığı TFF\'den alınamadı (' + e.message + ').');
   }
@@ -454,15 +509,16 @@ async function golKralligiGetir() {
     const eski = await getir(SITE_ADRES + '/gol-kralligi.json?t=' + Date.now(), true);
     if (eski && eski.oyuncular && eski.oyuncular.length) { console.log('Yayındaki sitenin son gol krallığı listesi kullanılıyor.'); return eski; }
   } catch (e) { /* yok */ }
-  return { oyuncular: [], kaynak: '', guncelleme: '' };
+  return { oyuncular: [], asistler: [], kaynak: '', guncelleme: '' };
 }
-function golKaynakNotu() {
+function golKaynakNotu(gk) {
+  if (gk && gk.kaynak === 'tablo') return 'Veri: ' + kac(A.site_adi || 'Futbolun 2 Yüzü');
   return 'Kaynak: <a href="' + TFF_GOL_URL + '" target="_blank" rel="noopener">TFF</a>';
 }
-function golTablo(gk, adet) {
+function golTablo(gk, adet, liste, kisa, uzun) {
   let sira = 0, onceki = null;
-  return '<table><thead><tr><th scope="col">#</th><th scope="col">Oyuncu</th><th scope="col" title="Gol">G</th></tr></thead><tbody>' +
-    gk.oyuncular.slice(0, adet).map(function (o, i) {
+  return '<table><thead><tr><th scope="col">#</th><th scope="col">Oyuncu</th><th scope="col" title="' + (uzun || 'Gol') + '">' + (kisa || 'G') + '</th></tr></thead><tbody>' +
+    (liste || gk.oyuncular).slice(0, adet).map(function (o, i) {
       if (o.gol !== onceki) { sira = i + 1; onceki = o.gol; }
       return '<tr><td>' + sira + '</td><td><span style="display:flex;flex-direction:column"><span style="color:var(--yazi);font-weight:600">' + kac(o.oyuncu) + '</span><span class="meta" style="font-weight:400">' + kac(o.kulup) + '</span></span></td><td class="p">' + o.gol + '</td></tr>';
     }).join('') + '</tbody></table>';
@@ -470,7 +526,7 @@ function golTablo(gk, adet) {
 function golKucuk(gk) {
   if (!gk.oyuncular.length) return '';
   return '<aside class="kutu puan" aria-label="Gol krallığı"><div class="bolum-baslik"><h2 class="bb-k">Gol Krallığı</h2></div>' +
-    golTablo(gk, 5) + '<a class="tum" href="/puan-durumu/#gol-kralligi">Tüm liste →</a><p class="not">' + golKaynakNotu() + '</p></aside>';
+    golTablo(gk, 5) + '<a class="tum" href="/puan-durumu/#gol-kralligi">Tüm liste →</a><p class="not">' + golKaynakNotu(gk) + '</p></aside>';
 }
 
 function kaynakNotu(pd) {
@@ -681,9 +737,16 @@ function puanSayfa(pd, gk) {
       }).join('') + '</tbody></table></div>' +
       '<p class="not">' + kaynakNotu(pd) + (kaynakNotu(pd) ? '. ' : '') + 'Tablo gün içinde otomatik olarak güncellenir; sıralama puana göre yapılır.</p>';
   }
-  if (gk.oyuncular.length) {
-    h += '<section id="gol-kralligi" style="display:flex;flex-direction:column;gap:14px;max-width:640px"><h2 class="bb">Gol Krallığı</h2>' +
-      '<div class="kutu puan">' + golTablo(gk, 20) + '</div><p class="not">' + golKaynakNotu() + '. Liste gün içinde otomatik olarak güncellenir.</p></section>';
+  const asistler = gk.asistler || [];
+  if (gk.oyuncular.length || asistler.length) {
+    const blok = function (id, baslik, liste, kisa, uzun) {
+      return '<div id="' + id + '" style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:14px"><h2 class="bb">' + baslik + '</h2>' +
+        '<div class="kutu puan">' + golTablo(gk, 20, liste, kisa, uzun) + '</div></div>';
+    };
+    h += '<section style="display:flex;flex-direction:column;gap:14px"><div class="satir">' +
+      (gk.oyuncular.length ? blok('gol-kralligi', 'Gol Krallığı', gk.oyuncular, 'G', 'Gol') : '') +
+      (asistler.length ? blok('asist-kralligi', 'Asist Krallığı', asistler, 'A', 'Asist') : '') +
+      '</div><p class="not">' + golKaynakNotu(gk) + '. Listeler gün içinde otomatik olarak güncellenir.</p></section>';
   }
   return sayfa({ aktif: 'puan', yol: '/puan-durumu/', baslik: 'Süper Lig Puan Durumu ve Gol Krallığı', aciklama: 'Güncel Trendyol Süper Lig puan durumu ve gol krallığı.', icerik: h });
 }
@@ -783,7 +846,7 @@ function bulunamadiSayfa() {
   yaz('index.html', anaSayfa(pd, gk));
   for (const k of Object.keys(KATEGORILER)) yaz(KATEGORILER[k].yol + '/index.html', kategoriSayfa(k));
   yaz('puan-durumu/index.html', puanSayfa(pd, gk));
-  if (gk.oyuncular.length) yaz('gol-kralligi.json', JSON.stringify(gk));
+  if (gk.oyuncular.length || (gk.asistler || []).length) yaz('gol-kralligi.json', JSON.stringify(gk));
   if (pd.takimlar.length) yaz('puan-durumu.json', JSON.stringify(pd));
   yaz('hakkimizda/index.html', hakkimizdaSayfa());
   yaz('404.html', bulunamadiSayfa());
