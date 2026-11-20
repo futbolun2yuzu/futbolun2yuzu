@@ -17,5 +17,6 @@
   "sezon": "",
   "vikipedi_sayfasi": "",
   "takim_adlari": {},
-  "cloudflare_analytics_token": "e1bdadf20f5548ba8c2c8ff4bf103421"
+  "cloudflare_analytics_token": "e1bdadf20f5548ba8c2c8ff4bf103421",
+  "gol_asist_tablosu": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLwBFevn4kNRP0LE0Q5n5Ntn8P7DxFtwQg8ilmIDVe_1c6UJaIJWR6PQDTaUc7hg/pub?gid=734568121&single=true&output=csv"
 }
