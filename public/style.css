@@ -196,6 +196,15 @@ table{width:100%;border-collapse:collapse}
 .etiketler{display:flex;flex-wrap:wrap;gap:8px}
 .etiketler span{font-size:13px;padding:6px 12px;border-radius:999px;background:var(--kutu);border:1px solid var(--cizgi);color:#C4D3D7}
 
+/* Paylaş çubuğu */
+.paylas-cubuk{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.paylas-cubuk .pb{font-weight:700}
+.paylas-cubuk .pd{display:flex;flex-wrap:wrap;gap:8px}
+.pdug{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-weight:600;font-size:14px;color:#fff;border:none;cursor:pointer;font-family:var(--metin)}
+.pdug:hover{color:#fff;filter:brightness(1.12)}
+.pdug.wa{background:#1E7A4C}.pdug.x{background:#000;border:1px solid #2E4550}.pdug.tg{background:#1F6FA3}.pdug.fb{background:#2D5BB5}
+.pdug.kopya{background:transparent;border:1px solid #2E4550;color:var(--yazi)}
+
 /* Sayfa başlığı */
 .sayfa-bas{display:flex;flex-direction:column;gap:8px}
 .sayfa-bas h1{font-family:var(--baslik);font-weight:800;font-size:52px;text-transform:uppercase;line-height:1}

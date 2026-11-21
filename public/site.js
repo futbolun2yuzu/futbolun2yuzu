@@ -34,3 +34,15 @@ document.querySelectorAll('[data-filtre]').forEach(function (grup) {
     });
   });
 });
+
+// Bağlantıyı kopyala düğmesi
+document.querySelectorAll('[data-kopyala]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var yazi = btn.querySelector('span');
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(btn.getAttribute('data-kopyala')).then(function () {
+      yazi.textContent = 'Kopyalandı';
+      setTimeout(function () { yazi.textContent = 'Bağlantıyı kopyala'; }, 2000);
+    });
+  });
+});

@@ -589,6 +589,20 @@ function sayfa(o) {
 }
 
 function yaziAdres(y) { return '/yazi/' + y.slug + '/'; }
+function paylasCubugu(y) {
+  const url = encodeURIComponent(SITE_ADRES + yaziAdres(y));
+  const metin = encodeURIComponent(y.baslik);
+  const ikon = function (d) { return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
+  const dugmeler = [
+    ['WhatsApp', 'https://wa.me/?text=' + metin + '%20' + url, 'wa', ikon('<path d="M21 11.5a8.4 8.4 0 0 1-12.6 7.3L3 20.5l1.8-5.2A8.4 8.4 0 1 1 21 11.5z"></path>')],
+    ['X', 'https://x.com/intent/post?text=' + metin + '&url=' + url, 'x', ikon('<path d="M4 4l16 16M20 4L4 20"></path>')],
+    ['Telegram', 'https://t.me/share/url?url=' + url + '&text=' + metin, 'tg', ikon('<path d="M22 3L2 11l7 2 2 7 4-5 5 4z"></path>')],
+    ['Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' + url, 'fb', ikon('<path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V9H6v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h2z"></path>')]
+  ];
+  return '<div class="paylas-cubuk kutu"><span class="pb">Bu yazıyı paylaş</span><div class="pd">' +
+    dugmeler.map(function (d) { return '<a class="pdug ' + d[2] + '" href="' + d[1] + '" target="_blank" rel="noopener">' + d[3] + d[0] + '</a>'; }).join('') +
+    '<button type="button" class="pdug kopya" data-kopyala="' + kac(SITE_ADRES + yaziAdres(y)) + '">' + ikon('<rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path>') + '<span>Bağlantıyı kopyala</span></button></div></div>';
+}
 function gorselKutu(y, sinif) {
   return '<div class="gorsel ' + (y.renk || '') + ' ' + (sinif || '') + '">' +
     (y.kapak ? '<img src="' + kac(y.kapak) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>';
@@ -769,6 +783,7 @@ function yaziSayfa(y) {
     '<button type="button" class="dugme cerceve" data-paylas>Paylaş</button></div>' +
     (y.kapak ? gorselKutu(y, 'kapak') : '') +
     '<div class="icerik">' + y.html + '</div>' +
+    paylasCubugu(y) +
     (y.etiketler.length ? '<div class="etiketler">' + y.etiketler.map(function (e) { return '<span>#' + kac(e.replace(/\s+/g, '')) + '</span>'; }).join('') + '</div>' : '') +
     '</article><aside class="yan">' +
     (benzer.length ? '<div class="kutu liste"><h2 class="bb-k">Diğer Yazılar</h2>' + benzer.map(function (b, i) {
