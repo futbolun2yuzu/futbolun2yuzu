@@ -900,8 +900,14 @@ function yaziSayfa(y) {
     '<a class="tum" href="/' + KATEGORILER[y.kat].yol + '/">← ' + KATEGORILER[y.kat].baslik + '</a>' +
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="' + etiketSinif(y) + '">' + kac(y.etiket) + '</span><span class="meta">• ' + tarihYaz(y.tarih) + ' · ' + y.sure + ' dk okuma</span></div>' +
     '<h1>' + kac(y.baslik) + '</h1>' + (y.ozet ? '<p class="giris">' + kac(y.ozet) + '</p>' : '') +
-    '<div class="yazar"><div class="avatar" aria-hidden="true">' + kac(harf) + '</div><div class="ad"><span style="font-weight:600">' + kac(y.yazar) + '</span><span class="meta">' + kac(A.site_adi) + '</span></div>' +
-    '<button type="button" class="dugme cerceve" data-paylas>Paylaş</button></div>' +
+    (function () {
+      const siteYazar = (y.yazar || '').trim() === (A.site_adi || '').trim();
+      const avatar = siteYazar
+        ? '<img class="avatar" src="/logo.png" alt="" width="44" height="44">'
+        : '<div class="avatar" aria-hidden="true">' + kac(harf) + '</div>';
+      return '<div class="yazar">' + avatar + '<div class="ad"><span style="font-weight:600">' + kac(y.yazar) + '</span>' +
+        (siteYazar ? '' : '<span class="meta">' + kac(A.site_adi) + '</span>') + '</div></div>';
+    })() +
     (y.kapak ? gorselKutu(y, 'kapak') : '') +
     '<div class="icerik">' + y.html + '</div>' +
     paylasCubugu(y) +

@@ -1,24 +1,5 @@
 // Futbolun 2 Yüzü — küçük etkileşimler
 
-// Paylaş düğmesi (yazının başındaki)
-// Telefonda: telefonun kendi paylaşım menüsü. Bilgisayarda: sayfanın sonundaki paylaş kutusuna git.
-document.querySelectorAll('[data-paylas]').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    var dokunmatik = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-    if (dokunmatik && navigator.share) {
-      navigator.share({ title: document.title, url: location.href }).catch(function () {});
-      return;
-    }
-    var kutu = document.getElementById('paylas');
-    if (kutu) {
-      kutu.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      kutu.classList.add('vurgu');
-      setTimeout(function () { kutu.classList.remove('vurgu'); }, 1600);
-      kutu.focus({ preventScroll: true });
-    }
-  });
-});
-
 // Transfer filtresi
 document.querySelectorAll('[data-filtre]').forEach(function (grup) {
   var tablo = document.getElementById(grup.getAttribute('data-filtre'));
