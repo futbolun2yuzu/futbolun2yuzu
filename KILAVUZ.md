@@ -156,8 +156,11 @@ TFF oyuncuların tam adını yazar. Bir ismi kısaltmak istersen `veri/ayarlar.j
 - **Site güncellenmedi:** Depoda **Actions** sekmesi. Kırmızı çarpılı olana tıkla → **olustur** →
   "Siteyi olustur" adımını aç. "HATA:" satırı hangi dosyada sorun olduğunu söyler
   (çoğunlukla .json'da eksik virgül/tırnak).
-- **Puan durumu:** Tablo İngilizce Vikipedi'deki sezon maddesinden alınır (ör. "2026–27 Süper Lig"),
-  sıralama puana göre yapılır. Vikipedi'ye ulaşılamazsa son başarılı tablo gösterilir.
+- **Puan durumu ve fikstür:** TFF'nin Süper Lig sayfasından alınır (günde 8 kez). TFF'ye ulaşılamazsa
+  puan durumu Vikipedi'den, o da olmazsa yayındaki son tablodan gösterilir.
+  TFF'nin şartlarına göre bilgiler kaynak gösterilerek kullanılabilir ama **ticari amaçla kullanılamaz**.
+  Reklam/sponsor gelmeden önce puan durumu, fikstür ve gol krallığı için başka bir kaynağa geçilmeli.
+- **Vikipedi yedeği:** Tablo İngilizce Vikipedi'deki sezon maddesinden alınır (ör. "2026–27 Süper Lig").
   Vikipedi gönüllülerle güncellendiği için maçlardan sonra birkaç saat gecikme olabilir.
   Tablonun altındaki "Kaynak: Vikipedi" yazısı lisans gereği zorunludur, silme.
   Yeni sezonda sayfa adı otomatik değişir. Bir takımın adını farklı göstermek istersen

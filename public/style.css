@@ -25,14 +25,14 @@ img{max-width:100%;display:block}
 
 /* Başlık */
 .ust{border-bottom:1px solid var(--cizgi)}
-.ust .kap{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;justify-content:space-between;padding-top:14px;padding-bottom:14px}
+.ust .kap{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;justify-content:space-between;padding-top:14px;padding-bottom:14px}
 .marka{display:flex;align-items:center;gap:12px;color:var(--yazi)}
 .marka:hover{color:var(--yazi)}
 .marka img{width:52px;height:52px;border-radius:50%}
 .marka span{font-family:var(--baslik);font-weight:800;font-size:28px;letter-spacing:.5px;text-transform:uppercase}
 .marka b{color:var(--turkuaz)}
 .menu{display:flex;gap:4px;overflow-x:auto;max-width:100%}
-.menu a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:8px;color:var(--yazi);font-weight:600;font-size:15px;white-space:nowrap}
+.menu a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border-radius:8px;color:var(--yazi);font-weight:600;font-size:14.5px;white-space:nowrap}
 .menu a:hover{background:var(--kutu);color:var(--yazi)}
 .menu a.aktif{background:var(--kutu);color:var(--turkuaz)}
 .dugme{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;background:var(--turuncu);color:var(--zemin);font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:var(--metin)}
@@ -196,6 +196,16 @@ table{width:100%;border-collapse:collapse}
 .etiketler{display:flex;flex-wrap:wrap;gap:8px}
 .etiketler span{font-size:13px;padding:6px 12px;border-radius:999px;background:var(--kutu);border:1px solid var(--cizgi);color:#C4D3D7}
 
+/* Fikstür */
+.fikstur{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.fikstur .fgun{font-size:12px;font-weight:700;color:var(--turuncu);letter-spacing:.5px;text-transform:uppercase;padding:12px 0 4px}
+.fikstur .fgun:first-child{padding-top:0}
+.fikstur .fmac{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--cizgi);font-size:14px}
+.fikstur .fev{text-align:right;font-weight:600}
+.fikstur .fdep{font-weight:600}
+.fikstur .fsaat{font-size:13px;color:var(--soluk);background:var(--zemin);padding:3px 8px;border-radius:6px;min-width:52px;text-align:center}
+.fikstur .fskor{font-weight:800;color:var(--turkuaz);background:var(--zemin);padding:3px 8px;border-radius:6px;min-width:52px;text-align:center}
+
 /* Paylaş çubuğu */
 .paylas-cubuk{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
 .paylas-cubuk .pb{font-weight:700}
@@ -217,6 +227,9 @@ table{width:100%;border-collapse:collapse}
 .alt a{color:var(--soluk)}
 .alt a:hover{color:var(--yazi)}
 
+@media (max-width:1240px){
+  .ust .dugme{display:none}
+}
 @media (max-width:640px){
   .kap{padding:0 16px}
   .marka span{font-size:24px}

@@ -343,6 +343,13 @@ async function sportsDbTablo() {
 // Vikipedi'ye ulaşılamazsa: yayındaki sitenin son tablosu kullanılır (ek ayar gerekmez)
 async function puanDurumuGetir() {
   try {
+    const takimlar = await tffPuanTablosu();
+    console.log('Puan durumu TFF\'den alındı: ' + takimlar.length + ' takım');
+    return { takimlar: takimlar, kaynak: 'tff', guncelleme: new Date().toISOString() };
+  } catch (e) {
+    console.warn('UYARI: Puan durumu TFF\'den alınamadı (' + e.message + ').');
+  }
+  try {
     const takimlar = await vikipediTablo();
     console.log('Puan durumu Vikipedi\'den alındı: ' + takimlar.length + ' takım (' + vikipediSayfasi() + ')');
     return { takimlar: takimlar, kaynak: 'vikipedi', guncelleme: new Date().toISOString() };
@@ -487,16 +494,7 @@ async function golKralligiGetir() {
     }
   }
   try {
-    const kontrol = new AbortController();
-    const zaman = setTimeout(function () { kontrol.abort(); }, 20000);
-    const yanit = await fetch(TFF_GOL_URL, { signal: kontrol.signal, headers: { 'User-Agent': 'Mozilla/5.0 (Futbolun2YuzuSiteBot; ' + SITE_ADRES + ')' } });
-    clearTimeout(zaman);
-    if (!yanit.ok) throw new Error('HTTP ' + yanit.status);
-    const tampon = Buffer.from(await yanit.arrayBuffer());
-    let karakter = ((yanit.headers.get('content-type') || '').match(/charset=([\w-]+)/i) || [])[1];
-    if (!karakter) karakter = (tampon.toString('latin1').match(/<meta[^>]+charset=["']?([\w-]+)/i) || [])[1] || 'utf-8';
-    let metin;
-    try { metin = new TextDecoder(karakter.toLowerCase()).decode(tampon); } catch (e) { metin = tampon.toString('utf8'); }
+    const metin = await tffHtml(TFF_GOL_URL);
     const liste = golListesiAyikla(htmlMetin(metin));
     if (liste.length < 5) throw new Error('listede yalnızca ' + liste.length + ' oyuncu bulundu');
     liste.sort(function (a, b) { return b.gol - a.gol; });
@@ -529,19 +527,142 @@ function golKucuk(gk) {
     golTablo(gk, 5) + '<a class="tum" href="/puan-durumu/#gol-kralligi">Tüm liste →</a><p class="not">' + golKaynakNotu(gk) + '</p></aside>';
 }
 
+// ---------- TFF: puan durumu ve fikstür ----------
+const TFF_LIG_URL = 'https://www.tff.org/Default.aspx?pageID=198';
+async function tffHtml(url) {
+  const kontrol = new AbortController();
+  const zaman = setTimeout(function () { kontrol.abort(); }, 20000);
+  try {
+    const yanit = await fetch(url, { signal: kontrol.signal, headers: { 'User-Agent': 'Mozilla/5.0 (Futbolun2YuzuSiteBot; ' + SITE_ADRES + ')' } });
+    if (!yanit.ok) throw new Error('HTTP ' + yanit.status);
+    const tampon = Buffer.from(await yanit.arrayBuffer());
+    let karakter = ((yanit.headers.get('content-type') || '').match(/charset=([\w-]+)/i) || [])[1];
+    if (!karakter) karakter = (tampon.toString('latin1').match(/<meta[^>]+charset=["']?([\w-]+)/i) || [])[1] || 'utf-8';
+    try { return new TextDecoder(karakter.toLowerCase()).decode(tampon); } catch (e) { return tampon.toString('utf8'); }
+  } finally { clearTimeout(zaman); }
+}
+const TFF_AD = "[A-ZÇĞİÖŞÜÂÎÛ0-9 .&'’]";
+function tffPuanAyikla(metin) {
+  const duz = htmlMetin(metin).join(' ');
+  const bas = duz.search(/PUAN DURUMU/i);
+  if (bas < 0) return [];
+  const re = new RegExp('(\\d{1,2})\\.\\s*([A-ZÇĞİÖŞÜÂÎÛ]' + TFF_AD + '*?)\\s+(\\d{1,2})\\s+(\\d{1,2})\\s+(\\d{1,2})\\s+(\\d{1,2})\\s+(\\d{1,3})\\s+(\\d{1,3})\\s+(-?\\d{1,3})\\s+(-?\\d{1,3})(?!\\d)', 'g');
+  re.lastIndex = bas;
+  const satirlar = []; let m;
+  while ((m = re.exec(duz)) && satirlar.length < 20) {
+    const s = { sira: +m[1], ham: m[2], o: +m[3], g: +m[4], b: +m[5], m: +m[6], a: +m[7], y: +m[8], av: +m[9], p: +m[10] };
+    if (s.sira !== satirlar.length + 1 || s.g + s.b + s.m !== s.o) { if (satirlar.length) break; else continue; }
+    satirlar.push(s);
+  }
+  return satirlar.map(function (s) {
+    return { sira: s.sira, takim: kulupDuzelt(s.ham), logo: '', o: s.o, g: s.g, b: s.b, m: s.m, a: s.a, y: s.y, av: s.av, p: s.p, form: '' };
+  });
+}
+function tffMaclarAyikla(metin) {
+  const duz = htmlMetin(metin).join(' ');
+  const re = new RegExp('(\\d{2})\\.(\\d{2})\\.(\\d{4})\\s+(\\d{2}:\\d{2})\\s+(' + TFF_AD + '+?)\\s+(?:(\\d{1,2})\\s*-\\s*(\\d{1,2})|-)\\s+(' + TFF_AD + '+?)\\s+Detaylar', 'g');
+  const maclar = []; const gorulen = {}; let m;
+  while ((m = re.exec(duz))) {
+    const anahtar = m[5].trim() + '|' + m[8].trim();
+    if (gorulen[anahtar]) continue;
+    gorulen[anahtar] = true;
+    maclar.push({
+      tarih: m[3] + '-' + m[2] + '-' + m[1], saat: m[4],
+      ev: kulupDuzelt(m[5]), dep: kulupDuzelt(m[8]),
+      evGol: m[6] != null ? +m[6] : null, depGol: m[7] != null ? +m[7] : null
+    });
+  }
+  return maclar;
+}
+async function tffPuanTablosu() {
+  const takimlar = tffPuanAyikla(await tffHtml(TFF_LIG_URL));
+  if (takimlar.length < 16) throw new Error('tabloda yalnızca ' + takimlar.length + ' takım bulundu');
+  return takimlar;
+}
+async function fiksturGetir(pd) {
+  try {
+    const enCok = Math.max.apply(null, (pd.takimlar || []).map(function (t) { return t.o || 0; }).concat([0]));
+    const haftalar = {};
+    for (const h of [Math.max(1, enCok), enCok + 1]) {
+      if (h > 34) continue;
+      const maclar = tffMaclarAyikla(await tffHtml(TFF_LIG_URL + '&hafta=' + h));
+      maclar.sort(function (a, b) { return (a.tarih + a.saat).localeCompare(b.tarih + b.saat); });
+      if (maclar.length) haftalar[h] = maclar;
+    }
+    const nolar = Object.keys(haftalar).map(Number).sort(function (a, b) { return a - b; });
+    if (!nolar.length) throw new Error('maç listesi bulunamadı');
+    // Gelecek hafta: içinde oynanmamış maç olan ilk hafta
+    let gelecek = nolar.find(function (h) { return haftalar[h].some(function (x) { return x.evGol === null; }); });
+    if (gelecek == null) gelecek = nolar[nolar.length - 1];
+    const onceki = nolar.filter(function (h) { return h < gelecek; }).pop();
+    const sonraki = nolar.filter(function (h) { return h > gelecek; })[0];
+    console.log('Fikstür TFF\'den alındı: ' + gelecek + '. hafta (' + haftalar[gelecek].length + ' maç)');
+    return {
+      hafta: gelecek, maclar: haftalar[gelecek],
+      oncekiHafta: onceki || null, oncekiMaclar: onceki ? haftalar[onceki] : [],
+      sonrakiHafta: sonraki || null, sonrakiMaclar: sonraki ? haftalar[sonraki] : [],
+      kaynak: 'tff', guncelleme: new Date().toISOString()
+    };
+  } catch (e) {
+    console.warn('UYARI: Fikstür TFF\'den alınamadı (' + e.message + ').');
+  }
+  try {
+    const eski = await getir(SITE_ADRES + '/fikstur.json?t=' + Date.now(), true);
+    if (eski && eski.maclar && eski.maclar.length) { console.log('Yayındaki sitenin son fikstürü kullanılıyor.'); return eski; }
+  } catch (e) { /* yok */ }
+  return { hafta: null, maclar: [], oncekiMaclar: [], kaynak: '' };
+}
+const GUNLER = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+function macTarihi(m) {
+  const p = m.tarih.split('-').map(Number);
+  const d = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+  return p[2] + ' ' + AYLAR[p[1] - 1].slice(0, 3) + ' ' + GUNLER[d.getUTCDay()];
+}
+function macListesi(maclar, gunGoster) {
+  let son = '';
+  return '<ul class="fikstur">' + maclar.map(function (m) {
+    const gun = macTarihi(m);
+    const baslik = gunGoster && gun !== son ? '<li class="fgun">' + gun + '</li>' : '';
+    son = gun;
+    const oynandi = m.evGol !== null && m.evGol !== undefined;
+    return baslik + '<li class="fmac"><span class="fev">' + kac(m.ev) + '</span>' +
+      (oynandi ? '<span class="fskor">' + m.evGol + ' - ' + m.depGol + '</span>' : '<span class="fsaat">' + kac(m.saat) + '</span>') +
+      '<span class="fdep">' + kac(m.dep) + '</span></li>';
+  }).join('') + '</ul>';
+}
+function fiksturKucuk(fk) {
+  if (!fk.maclar || !fk.maclar.length) return '';
+  return '<aside class="kutu puan" aria-label="Haftanın maçları"><div class="bolum-baslik"><h2 class="bb-k">Bu Hafta</h2><span class="meta">' + fk.hafta + '. hafta</span></div>' +
+    macListesi(fk.maclar, true) + '<a class="tum" href="/fikstur/">Fikstür ve sonuçlar →</a></aside>';
+}
+function fiksturSayfa(fk) {
+  let h = '<div class="sayfa-bas"><h1>Fikstür</h1><p>Trendyol Süper Lig ' + sezon().replace('-', '–') + ' sezonu</p></div>';
+  if (!fk.maclar || !fk.maclar.length) {
+    h += '<div class="kutu bos">Fikstür şu an alınamadı. Kısa süre sonra tekrar dene.</div>';
+  } else {
+    h += '<div class="satir">' +
+      '<section style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:14px"><h2 class="bb">' + fk.hafta + '. Hafta</h2><div class="kutu puan">' + macListesi(fk.maclar, true) + '</div></section>' +
+      (fk.sonrakiMaclar && fk.sonrakiMaclar.length ? '<section style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:14px"><h2 class="bb">' + fk.sonrakiHafta + '. Hafta</h2><div class="kutu puan">' + macListesi(fk.sonrakiMaclar, true) + '</div></section>' : '') +
+      (fk.oncekiMaclar && fk.oncekiMaclar.length ? '<section style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:14px"><h2 class="bb">' + fk.oncekiHafta + '. Hafta Sonuçları</h2><div class="kutu puan">' + macListesi(fk.oncekiMaclar, true) + '</div></section>' : '') +
+      '</div><p class="not">Kaynak: <a href="' + TFF_LIG_URL + '" target="_blank" rel="noopener">TFF</a>. Saatler Türkiye saatidir. Fikstür gün içinde otomatik olarak güncellenir.</p>';
+  }
+  return sayfa({ aktif: 'fikstur', yol: '/fikstur/', baslik: 'Süper Lig Fikstürü ve Sonuçlar', aciklama: 'Trendyol Süper Lig haftanın maçları, maç saatleri ve sonuçları.', icerik: h });
+}
+
 function kaynakNotu(pd) {
   if (pd.kaynak === 'vikipedi') {
     return 'Kaynak: <a href="' + vikipediAdres() + '" target="_blank" rel="noopener">Vikipedi</a> · ' +
       '<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.tr" target="_blank" rel="noopener">CC BY-SA 4.0</a>';
   }
   if (pd.kaynak === 'thesportsdb') return 'Kaynak: TheSportsDB';
+  if (pd.kaynak === 'tff') return 'Kaynak: <a href="' + TFF_LIG_URL + '" target="_blank" rel="noopener">TFF</a>';
   return '';
 }
 
 // ---------- şablon parçaları ----------
 const MENU = [
   ['/', 'Ana Sayfa', 'ana'], ['/haberler/', 'Haberler', 'haber'], ['/makaleler/', 'Makaleler', 'makale'],
-  ['/transferler/', 'Transferler', 'transfer'], ['/analiz/', 'Analiz', 'analiz'], ['/puan-durumu/', 'Puan Durumu', 'puan']
+  ['/transferler/', 'Transferler', 'transfer'], ['/analiz/', 'Analiz', 'analiz'], ['/puan-durumu/', 'Puan Durumu', 'puan'], ['/fikstur/', 'Fikstür', 'fikstur']
 ];
 function sosyal() {
   const s = [];
@@ -660,7 +781,7 @@ function puanKucuk(pd) {
 }
 
 // ---------- sayfalar ----------
-function anaSayfa(pd, gk) {
+function anaSayfa(pd, gk, fk) {
   const manset = yazilar.find(function (y) { return y.manset; }) || yazilar[0];
   const digerleri = yazilar.filter(function (y) { return y !== manset; });
   let sonHaberler = digerleri.filter(function (y) { return y.kat === 'haber' || y.kat === 'transfer'; }).slice(0, 5);
@@ -706,7 +827,7 @@ function anaSayfa(pd, gk) {
     '<div class="bolum-baslik"' + (makaleler.length ? ' style="margin-top:18px"' : '') + '><h2 class="bb">Transfer Masası</h2>' + (transferler.length ? transferFiltre('tr-ana') : '') + '</div>' +
     transferTablo(transferler.slice(0, 6), 'tr-ana') +
     (transferler.length > 6 ? '<a class="tum" href="/transferler/">Tüm transferler →</a>' : '') +
-    '</div><div class="yan">' + puanKucuk(pd) + golKucuk(gk) + '</div></section>';
+    '</div><div class="yan">' + fiksturKucuk(fk) + puanKucuk(pd) + golKucuk(gk) + '</div></section>';
 
   // Son analiz
   if (sonAnaliz && sonAnaliz !== manset) {
@@ -749,7 +870,7 @@ function puanSayfa(pd, gk) {
       pd.takimlar.map(function (t) {
         return '<tr><td>' + t.sira + '</td><td><span class="takim">' + (t.logo ? '<img src="' + kac(t.logo) + '/tiny" alt="" loading="lazy" width="20" height="20">' : '') + kac(t.takim) + '</span></td><td>' + t.o + '</td><td>' + t.g + '</td><td>' + t.b + '</td><td>' + t.m + '</td><td>' + t.a + '</td><td>' + t.y + '</td><td>' + (t.av > 0 ? '+' : '') + t.av + '</td><td class="p">' + t.p + '</td>' + (formVar ? '<td>' + formRozet(t.form) + '</td>' : '') + '</tr>';
       }).join('') + '</tbody></table></div>' +
-      '<p class="not">' + kaynakNotu(pd) + (kaynakNotu(pd) ? '. ' : '') + 'Tablo gün içinde otomatik olarak güncellenir; sıralama puana göre yapılır.</p>';
+      '<p class="not">' + kaynakNotu(pd) + (kaynakNotu(pd) ? '. ' : '') + 'Tablo gün içinde otomatik olarak güncellenir.</p>';
   }
   const asistler = gk.asistler || [];
   if (gk.oyuncular.length || asistler.length) {
@@ -857,10 +978,13 @@ function bulunamadiSayfa() {
 
   const pd = await puanDurumuGetir();
   const gk = await golKralligiGetir();
+  const fk = await fiksturGetir(pd);
 
-  yaz('index.html', anaSayfa(pd, gk));
+  yaz('index.html', anaSayfa(pd, gk, fk));
   for (const k of Object.keys(KATEGORILER)) yaz(KATEGORILER[k].yol + '/index.html', kategoriSayfa(k));
   yaz('puan-durumu/index.html', puanSayfa(pd, gk));
+  yaz('fikstur/index.html', fiksturSayfa(fk));
+  if (fk.maclar && fk.maclar.length) yaz('fikstur.json', JSON.stringify(fk));
   if (gk.oyuncular.length || (gk.asistler || []).length) yaz('gol-kralligi.json', JSON.stringify(gk));
   if (pd.takimlar.length) yaz('puan-durumu.json', JSON.stringify(pd));
   yaz('hakkimizda/index.html', hakkimizdaSayfa());
@@ -873,7 +997,7 @@ function bulunamadiSayfa() {
     yaz('yazi/' + y.slug + '/index.html', yaziSayfa(y));
   }
 
-  const adresler = ['/', '/haberler/', '/makaleler/', '/transferler/', '/analiz/', '/puan-durumu/', '/hakkimizda/', '/gizlilik/']
+  const adresler = ['/', '/haberler/', '/makaleler/', '/transferler/', '/analiz/', '/puan-durumu/', '/fikstur/', '/hakkimizda/', '/gizlilik/']
     .concat(yazilar.map(yaziAdres));
   yaz('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     adresler.map(function (u) { return '  <url><loc>' + SITE_ADRES + u + '</loc></url>'; }).join('\n') + '\n</urlset>\n');
