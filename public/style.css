@@ -209,6 +209,8 @@ table{width:100%;border-collapse:collapse}
 /* Paylaş çubuğu */
 .paylas-cubuk{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
 .paylas-cubuk .pb{font-weight:700}
+.paylas-cubuk{transition:box-shadow .3s,border-color .3s;outline:none}
+.paylas-cubuk.vurgu{border-color:var(--turkuaz);box-shadow:0 0 0 3px rgba(43,192,180,.35)}
 .paylas-cubuk .pd{display:flex;flex-wrap:wrap;gap:8px}
 .pdug{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-weight:600;font-size:14px;color:#fff;border:none;cursor:pointer;font-family:var(--metin)}
 .pdug:hover{color:#fff;filter:brightness(1.12)}

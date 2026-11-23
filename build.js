@@ -720,7 +720,7 @@ function paylasCubugu(y) {
     ['Telegram', 'https://t.me/share/url?url=' + url + '&text=' + metin, 'tg', ikon('<path d="M22 3L2 11l7 2 2 7 4-5 5 4z"></path>')],
     ['Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' + url, 'fb', ikon('<path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V9H6v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h2z"></path>')]
   ];
-  return '<div class="paylas-cubuk kutu"><span class="pb">Bu yazıyı paylaş</span><div class="pd">' +
+  return '<div class="paylas-cubuk kutu" id="paylas" tabindex="-1"><span class="pb">Bu yazıyı paylaş</span><div class="pd">' +
     dugmeler.map(function (d) { return '<a class="pdug ' + d[2] + '" href="' + d[1] + '" target="_blank" rel="noopener">' + d[3] + d[0] + '</a>'; }).join('') +
     '<button type="button" class="pdug kopya" data-kopyala="' + kac(SITE_ADRES + yaziAdres(y)) + '">' + ikon('<rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path>') + '<span>Bağlantıyı kopyala</span></button></div></div>';
 }
