@@ -716,7 +716,7 @@ function paylasCubugu(y) {
   const ikon = function (d) { return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
   const dugmeler = [
     ['WhatsApp', 'https://wa.me/?text=' + metin + '%20' + url, 'wa', ikon('<path d="M21 11.5a8.4 8.4 0 0 1-12.6 7.3L3 20.5l1.8-5.2A8.4 8.4 0 1 1 21 11.5z"></path>')],
-    ['X', 'https://x.com/intent/post?text=' + metin + '&url=' + url, 'x', ikon('<path d="M4 4l16 16M20 4L4 20"></path>')],
+    ['X', 'https://x.com/intent/tweet?text=' + metin + '&url=' + url, 'x', ikon('<path d="M4 4l16 16M20 4L4 20"></path>')],
     ['Telegram', 'https://t.me/share/url?url=' + url + '&text=' + metin, 'tg', ikon('<path d="M22 3L2 11l7 2 2 7 4-5 5 4z"></path>')],
     ['Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' + url, 'fb', ikon('<path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V9H6v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h2z"></path>')]
   ];
