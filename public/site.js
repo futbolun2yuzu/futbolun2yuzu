@@ -28,3 +28,15 @@ document.querySelectorAll('[data-kopyala]').forEach(function (btn) {
     });
   });
 });
+
+// Gece / gündüz teması
+document.querySelectorAll('[data-tema-dug]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var kok = document.documentElement;
+    var acik = kok.getAttribute('data-tema') !== 'acik';
+    if (acik) kok.setAttribute('data-tema', 'acik'); else kok.removeAttribute('data-tema');
+    try { localStorage.setItem('tema', acik ? 'acik' : 'koyu'); } catch (e) {}
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.content = acik ? '#F3F6F7' : '#081015';
+  });
+});
