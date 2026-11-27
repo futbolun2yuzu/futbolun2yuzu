@@ -238,6 +238,18 @@ table{width:100%;border-collapse:collapse}
 .fikstur .fdep{display:flex;align-items:center;gap:8px;font-weight:600}
 .fikstur .fsaat{font-size:13px;color:var(--soluk);background:var(--zemin);padding:3px 8px;border-radius:6px;min-width:52px;text-align:center}
 .fikstur .fskor{font-weight:800;color:var(--turkuaz);background:var(--zemin);padding:3px 8px;border-radius:6px;min-width:52px;text-align:center}
+.fikstur.kompakt .fmac{grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:6px 12px;padding:10px 0}
+.fikstur.kompakt .ftak{display:flex;align-items:center;gap:9px;min-width:0;font-weight:600;grid-column:1}
+.fikstur.kompakt .t1{grid-row:1}
+.fikstur.kompakt .t2{grid-row:2}
+.fikstur.kompakt .fad{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fikstur.kompakt .rozet{width:24px;height:24px;font-size:8px}
+.fikstur.kompakt .rozet.uzun{font-size:6.5px}
+.fikstur.kompakt .fsaat{grid-column:2;grid-row:1 / span 2;align-self:center}
+.fikstur.kompakt .fgol{grid-column:2;font-weight:800;font-size:15px;color:var(--soluk);text-align:center;min-width:22px}
+.fikstur.kompakt .g1{grid-row:1}
+.fikstur.kompakt .g2{grid-row:2}
+.fikstur.kompakt .fgol.kaz{color:var(--turkuaz)}
 
 /* Paylaş çubuğu */
 .paylas-cubuk{padding:18px 20px;display:flex;flex-direction:column;gap:12px}

@@ -643,13 +643,20 @@ function macTarihi(m) {
   const d = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
   return p[2] + ' ' + AYLAR[p[1] - 1].slice(0, 3) + ' ' + GUNLER[d.getUTCDay()];
 }
-function macListesi(maclar, gunGoster) {
+function macListesi(maclar, gunGoster, kompakt) {
   let son = '';
-  return '<ul class="fikstur">' + maclar.map(function (m) {
+  return '<ul class="fikstur' + (kompakt ? ' kompakt' : '') + '">' + maclar.map(function (m) {
     const gun = macTarihi(m);
     const baslik = gunGoster && gun !== son ? '<li class="fgun">' + gun + '</li>' : '';
     son = gun;
     const oynandi = m.evGol !== null && m.evGol !== undefined;
+    if (kompakt) {
+      return baslik + '<li class="fmac">' +
+        '<span class="ftak t1">' + rozet(m.ev) + '<span class="fad">' + kac(m.ev) + '</span></span>' +
+        '<span class="ftak t2">' + rozet(m.dep) + '<span class="fad">' + kac(m.dep) + '</span></span>' +
+        (oynandi ? '<span class="fgol g1' + (m.evGol > m.depGol ? ' kaz' : '') + '">' + m.evGol + '</span><span class="fgol g2' + (m.depGol > m.evGol ? ' kaz' : '') + '">' + m.depGol + '</span>'
+          : '<span class="fsaat">' + kac(m.saat) + '</span>') + '</li>';
+    }
     return baslik + '<li class="fmac"><span class="fev">' + kac(m.ev) + rozet(m.ev) + '</span>' +
       (oynandi ? '<span class="fskor">' + m.evGol + ' - ' + m.depGol + '</span>' : '<span class="fsaat">' + kac(m.saat) + '</span>') +
       '<span class="fdep">' + rozet(m.dep) + kac(m.dep) + '</span></li>';
@@ -658,7 +665,7 @@ function macListesi(maclar, gunGoster) {
 function fiksturKucuk(fk) {
   if (!fk.maclar || !fk.maclar.length) return '';
   return '<aside class="kutu puan" aria-label="Haftanın maçları"><div class="bolum-baslik"><h2 class="bb-k">Bu Hafta</h2><span class="meta">' + fk.hafta + '. hafta</span></div>' +
-    macListesi(fk.maclar, true) + '<a class="tum" href="/fikstur/">Fikstür ve sonuçlar →</a></aside>';
+    macListesi(fk.maclar, true, true) + '<a class="tum" href="/fikstur/">Fikstür ve sonuçlar →</a></aside>';
 }
 function fiksturSayfa(fk) {
   let h = '<div class="sayfa-bas"><h1>Fikstür</h1><p>Trendyol Süper Lig ' + sezon().replace('-', '–') + ' sezonu</p></div>';
