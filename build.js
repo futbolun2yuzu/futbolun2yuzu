@@ -381,6 +381,31 @@ const KULUPLER = [
   ['EYÜP', 'Eyüpspor'], ['ERZURUM', 'Erzurumspor'], ['KAYSERİ', 'Kayserispor'], ['ANTALYA', 'Antalyaspor'],
   ['SİVAS', 'Sivasspor'], ['HATAY', 'Hatayspor'], ['KARAGÜMRÜK', 'Karagümrük'], ['BODRUM', 'Bodrum FK'], ['PENDİK', 'Pendikspor']
 ];
+// Takım rozetleri: logo yerine kendi tasarımımız (kısaltma, zemin, kenar, yazı rengi)
+const ROZETLER = {
+  'Galatasaray': ['GS', '#A90432', '#FDB912', '#FDB912'], 'Fenerbahçe': ['FB', '#163962', '#FFED00', '#FFED00'],
+  'Beşiktaş': ['BJK', '#111111', '#FFFFFF', '#FFFFFF'], 'Trabzonspor': ['TS', '#6E1D3A', '#4FA3DC', '#FFFFFF'],
+  'Başakşehir': ['İBFK', '#1B2B4B', '#E85D04', '#FFFFFF'], 'Amedspor': ['AMD', '#0B7A3B', '#D0021B', '#FFFFFF'],
+  'Kasımpaşa': ['KSP', '#1E3A8A', '#FFFFFF', '#FFFFFF'], 'Göztepe': ['GÖZ', '#D52B1E', '#FFD100', '#FFD100'],
+  'Çorum FK': ['ÇFK', '#C8102E', '#111111', '#FFFFFF'], 'Rizespor': ['RİZ', '#0A7D3E', '#2563EB', '#FFFFFF'],
+  'Kocaelispor': ['KOC', '#0A7D3E', '#111111', '#FFFFFF'], 'Samsunspor': ['SAM', '#E30613', '#FFFFFF', '#FFFFFF'],
+  'Konyaspor': ['KON', '#0A7D3E', '#FFFFFF', '#FFFFFF'], 'Gaziantep FK': ['GFK', '#D0021B', '#111111', '#FFFFFF'],
+  'Alanyaspor': ['ALA', '#F68B1F', '#0A7D3E', '#111111'], 'Gençlerbirliği': ['GB', '#D0021B', '#111111', '#FFFFFF'],
+  'Eyüpspor': ['EYP', '#6B2C91', '#FFD100', '#FFD100'], 'Erzurumspor': ['ERZ', '#1E5AA8', '#FFFFFF', '#FFFFFF'],
+  'Kayserispor': ['KAY', '#FFD100', '#D0021B', '#9B0010'], 'Antalyaspor': ['ANT', '#D0021B', '#FFFFFF', '#FFFFFF'],
+  'Sivasspor': ['SVS', '#D0021B', '#FFFFFF', '#FFFFFF'], 'Hatayspor': ['HTY', '#6E1D3A', '#FFFFFF', '#FFFFFF'],
+  'Karagümrük': ['FKG', '#D0021B', '#111111', '#FFFFFF'], 'Bodrum FK': ['BOD', '#0B8F5A', '#FFFFFF', '#FFFFFF'],
+  'Pendikspor': ['PEN', '#D0021B', '#FFFFFF', '#FFFFFF']
+};
+function rozet(ad) {
+  let r = ROZETLER[ad];
+  if (!r) {
+    const ham = String(ad || '').toLocaleUpperCase('tr');
+    for (const k of KULUPLER) if (ham.indexOf(k[0]) >= 0 && ROZETLER[k[1]]) { r = ROZETLER[k[1]]; break; }
+  }
+  if (!r) r = [String(ad || '?').replace(/[^A-Za-zÇĞİÖŞÜçğıöşü]/g, '').slice(0, 3).toLocaleUpperCase('tr'), '#2A4250', '#5B7480', '#FFFFFF'];
+  return '<span class="rozet' + (r[0].length > 3 ? ' uzun' : '') + '" style="background:' + r[1] + ';border-color:' + r[2] + ';color:' + r[3] + '" aria-hidden="true">' + kac(r[0]) + '</span>';
+}
 const BILINEN_OYUNCULAR = {
   'MOHAMED SALAH HAMED MAHROUS GHALY': 'Mohamed Salah',
   'VICTOR JAMES OSIMHEN': 'Victor Osimhen',
@@ -518,7 +543,7 @@ function golTablo(gk, adet, liste, kisa, uzun) {
   return '<table><thead><tr><th scope="col">#</th><th scope="col">Oyuncu</th><th scope="col" title="' + (uzun || 'Gol') + '">' + (kisa || 'G') + '</th></tr></thead><tbody>' +
     (liste || gk.oyuncular).slice(0, adet).map(function (o, i) {
       if (o.gol !== onceki) { sira = i + 1; onceki = o.gol; }
-      return '<tr><td>' + sira + '</td><td><span style="display:flex;flex-direction:column"><span style="color:var(--yazi);font-weight:600">' + kac(o.oyuncu) + '</span><span class="meta" style="font-weight:400">' + kac(o.kulup) + '</span></span></td><td class="p">' + o.gol + '</td></tr>';
+      return '<tr><td>' + sira + '</td><td><span style="display:flex;flex-direction:column"><span style="color:var(--yazi);font-weight:600">' + kac(o.oyuncu) + '</span><span class="meta takim" style="font-weight:400;gap:6px">' + rozet(o.kulup) + kac(o.kulup) + '</span></span></td><td class="p">' + o.gol + '</td></tr>';
     }).join('') + '</tbody></table>';
 }
 function golKucuk(gk) {
@@ -625,9 +650,9 @@ function macListesi(maclar, gunGoster) {
     const baslik = gunGoster && gun !== son ? '<li class="fgun">' + gun + '</li>' : '';
     son = gun;
     const oynandi = m.evGol !== null && m.evGol !== undefined;
-    return baslik + '<li class="fmac"><span class="fev">' + kac(m.ev) + '</span>' +
+    return baslik + '<li class="fmac"><span class="fev">' + kac(m.ev) + rozet(m.ev) + '</span>' +
       (oynandi ? '<span class="fskor">' + m.evGol + ' - ' + m.depGol + '</span>' : '<span class="fsaat">' + kac(m.saat) + '</span>') +
-      '<span class="fdep">' + kac(m.dep) + '</span></li>';
+      '<span class="fdep">' + rozet(m.dep) + kac(m.dep) + '</span></li>';
   }).join('') + '</ul>';
 }
 function fiksturKucuk(fk) {
@@ -782,7 +807,7 @@ function puanKucuk(pd) {
   if (!rows.length) return h + '<p class="bos">Puan durumu şu an alınamadı.</p></aside>';
   h += '<table><thead><tr><th scope="col">#</th><th scope="col">Takım</th><th scope="col" title="Oynanan">O</th><th scope="col" title="Averaj">AV</th><th scope="col" title="Puan">P</th></tr></thead><tbody>' +
     rows.map(function (t) {
-      return '<tr><td>' + t.sira + '</td><td><span class="takim">' + (t.logo ? '<img src="' + kac(t.logo) + '/tiny" alt="" loading="lazy" width="20" height="20">' : '') + kac(t.takim) + '</span></td><td>' + t.o + '</td><td>' + (t.av > 0 ? '+' : '') + t.av + '</td><td class="p">' + t.p + '</td></tr>';
+      return '<tr><td>' + t.sira + '</td><td><span class="takim">' + rozet(t.takim) + kac(t.takim) + '</span></td><td>' + t.o + '</td><td>' + (t.av > 0 ? '+' : '') + t.av + '</td><td class="p">' + t.p + '</td></tr>';
     }).join('') + '</tbody></table>';
   return h + '<a class="tum" href="/puan-durumu/">Tam tabloyu gör →</a><p class="not">' + [guncellemeNotu(pd), kaynakNotu(pd)].filter(Boolean).join('<br>') + '</p></aside>';
 }
@@ -875,7 +900,7 @@ function puanSayfa(pd, gk) {
     const formVar = pd.takimlar.some(function (t) { return t.form; });
     h += '<div class="kutu puan tam tablo-kutu"><table><thead><tr><th scope="col">#</th><th scope="col">Takım</th><th scope="col" title="Oynanan">O</th><th scope="col" title="Galibiyet">G</th><th scope="col" title="Beraberlik">B</th><th scope="col" title="Mağlubiyet">M</th><th scope="col" title="Atılan">A</th><th scope="col" title="Yenilen">Y</th><th scope="col" title="Averaj">AV</th><th scope="col" title="Puan">P</th>' + (formVar ? '<th scope="col">Form</th>' : '') + '</tr></thead><tbody>' +
       pd.takimlar.map(function (t) {
-        return '<tr><td>' + t.sira + '</td><td><span class="takim">' + (t.logo ? '<img src="' + kac(t.logo) + '/tiny" alt="" loading="lazy" width="20" height="20">' : '') + kac(t.takim) + '</span></td><td>' + t.o + '</td><td>' + t.g + '</td><td>' + t.b + '</td><td>' + t.m + '</td><td>' + t.a + '</td><td>' + t.y + '</td><td>' + (t.av > 0 ? '+' : '') + t.av + '</td><td class="p">' + t.p + '</td>' + (formVar ? '<td>' + formRozet(t.form) + '</td>' : '') + '</tr>';
+        return '<tr><td>' + t.sira + '</td><td><span class="takim">' + rozet(t.takim) + kac(t.takim) + '</span></td><td>' + t.o + '</td><td>' + t.g + '</td><td>' + t.b + '</td><td>' + t.m + '</td><td>' + t.a + '</td><td>' + t.y + '</td><td>' + (t.av > 0 ? '+' : '') + t.av + '</td><td class="p">' + t.p + '</td>' + (formVar ? '<td>' + formRozet(t.form) + '</td>' : '') + '</tr>';
       }).join('') + '</tbody></table></div>' +
       '<p class="not">' + kaynakNotu(pd) + (kaynakNotu(pd) ? '. ' : '') + 'Tablo gün içinde otomatik olarak güncellenir.</p>';
   }

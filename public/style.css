@@ -1,7 +1,7 @@
 /* Futbolun 2 Yüzü — site stili */
 :root{
   /* GECE (varsayılan) */
-  --zemin:#081015; --zemin2:#060C10; --kutu:#101C23; --kutu2:#142530; --cizgi:#1C2D36; --cizgi2:#2A4250;
+  --zemin:#081015; --zemin2:#060C10; --kutu:#172832; --kutu2:#1E3340; --cizgi:#253A46; --cizgi2:#35515F;
   --yazi:#F4F8F9; --yazi2:#C3D2D6; --govde:#DDE7EA; --soluk:#94A9B0; --soluk2:#71878E;
   --turkuaz:#2FCABD; --turkuaz-acik:#7FE9DF; --turkuaz-koyu:#1A7E85; --turuncu:#FF8A3D; --turuncu-acik:var(--turuncu-acik);
   --kirmizi:#E5484D; --sari:#F5C04A; --koyu:#0E1A21;
@@ -166,7 +166,11 @@ table{width:100%;border-collapse:collapse}
 .puan td:nth-child(2){color:var(--yazi);font-weight:600}
 .puan td.p{color:var(--yazi);font-weight:700}
 .takim{display:flex;align-items:center;gap:8px}
-.takim img{width:20px;height:20px;object-fit:contain}
+.rozet{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:2px solid;font:800 9.5px/1 var(--metin);letter-spacing:-.2px;box-sizing:border-box}
+[data-tema="acik"] .rozet{box-shadow:0 0 0 1px rgba(12,26,33,.18)}
+.rozet.uzun{font-size:7.5px;letter-spacing:-.4px}
+.meta .rozet{width:20px;height:20px;border-width:1.5px;font-size:7px}
+.meta .rozet.uzun{font-size:5.5px}
 .not{margin:0;font-size:12px;color:var(--soluk);line-height:1.5}
 .puan.tam table{font-size:15px;min-width:640px}
 .puan.tam td{padding:11px 6px}
@@ -230,8 +234,8 @@ table{width:100%;border-collapse:collapse}
 .fikstur .fgun{font-size:12px;font-weight:700;color:var(--turuncu);letter-spacing:.5px;text-transform:uppercase;padding:12px 0 4px}
 .fikstur .fgun:first-child{padding-top:0}
 .fikstur .fmac{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--cizgi);font-size:14px}
-.fikstur .fev{text-align:right;font-weight:600}
-.fikstur .fdep{font-weight:600}
+.fikstur .fev{display:flex;align-items:center;justify-content:flex-end;gap:8px;text-align:right;font-weight:600}
+.fikstur .fdep{display:flex;align-items:center;gap:8px;font-weight:600}
 .fikstur .fsaat{font-size:13px;color:var(--soluk);background:var(--zemin);padding:3px 8px;border-radius:6px;min-width:52px;text-align:center}
 .fikstur .fskor{font-weight:800;color:var(--turkuaz);background:var(--zemin);padding:3px 8px;border-radius:6px;min-width:52px;text-align:center}
 
